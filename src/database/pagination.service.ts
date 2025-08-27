@@ -45,7 +45,9 @@ export class PaginationService {
   /**
    * Default pagination options
    */
-  private getDefaultOptions(): Required<Omit<PaginationOptions, 'search' | 'searchFields' | 'filters'>> {
+  private getDefaultOptions(): Required<
+    Omit<PaginationOptions, 'search' | 'searchFields' | 'filters'>
+  > {
     return {
       page: 1,
       limit: 10,
@@ -59,7 +61,7 @@ export class PaginationService {
    */
   private normalizeOptions(options: PaginationOptions): PaginationOptions {
     const defaults = this.getDefaultOptions();
-    
+
     return {
       page: Math.max(1, options.page || defaults.page),
       limit: Math.min(100, Math.max(1, options.limit || defaults.limit)),
@@ -74,11 +76,7 @@ export class PaginationService {
   /**
    * Create pagination metadata
    */
-  private createPaginationMeta(
-    page: number,
-    limit: number,
-    total: number,
-  ): PaginationMeta {
+  private createPaginationMeta(page: number, limit: number, total: number): PaginationMeta {
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -108,7 +106,7 @@ export class PaginationService {
 
     // Apply search
     if (search && searchFields && searchFields.length > 0) {
-      const searchConditions = searchFields.map(field => ({
+      const searchConditions = searchFields.map((field) => ({
         [field]: { $ilike: `%${search}%` },
       }));
       whereConditions = {
@@ -147,12 +145,7 @@ export class PaginationService {
     const { page, limit, sortBy, sortOrder, search, searchFields, filters } = normalizedOptions;
 
     // Build where conditions
-    const whereConditions = this.buildWhereConditions(
-      where,
-      search,
-      searchFields,
-      filters,
-    );
+    const whereConditions = this.buildWhereConditions(where, search, searchFields, filters);
 
     // Get total count
     const total = await repository.count(whereConditions);
@@ -233,9 +226,8 @@ export class PaginationService {
     const hasNext = results.length > limit;
     const data = hasNext ? results.slice(0, -1) : results;
 
-    const nextCursor = hasNext && data.length > 0 
-      ? (data[data.length - 1] as any)[cursorField]
-      : null;
+    const nextCursor =
+      hasNext && data.length > 0 ? (data[data.length - 1] as any)[cursorField] : null;
 
     const previousCursor = cursor || null;
 

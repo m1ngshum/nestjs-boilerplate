@@ -5,7 +5,11 @@ import { ConfigurationService } from '../../config/configuration.service';
 import { match, MatchFunction } from 'path-to-regexp';
 
 interface CorsOptions {
-  origin?: string | string[] | boolean | ((origin: string, callback: (err: Error | null, allow?: boolean) => void) => void);
+  origin?:
+    | string
+    | string[]
+    | boolean
+    | ((origin: string, callback: (err: Error | null, allow?: boolean) => void) => void);
   credentials?: boolean;
   methods?: string[];
   allowedHeaders?: string[];
@@ -27,19 +31,16 @@ interface FastifyCorsPluginOptions {
   configService: ConfigurationService;
 }
 
-async function fastifyCorsPlugin(
-  fastify: FastifyInstance,
-  options: FastifyCorsPluginOptions
-) {
+async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsPluginOptions) {
   const { configService } = options;
-  
+
   // Get route-specific CORS configurations
   const routeConfigs = configService.cors.routes || [];
-  
+
   // Get environment-based domain configurations
   const currentEnv = configService.app.environment;
   const corsDomains = getAllowedDomains(configService, currentEnv);
-  
+
   // Process allowed domains
   const allowedOrigins = new Set<string>();
   const allowedOriginsRegex: RegExp[] = [];
@@ -89,7 +90,7 @@ async function fastifyCorsPlugin(
 
   // Process route-specific configurations
   const processedRoutes: ProcessedRoute[] = [];
-  
+
   routeConfigs.forEach((route) => {
     try {
       let matcher: MatchFunction<object>;
@@ -107,7 +108,7 @@ async function fastifyCorsPlugin(
       }
 
       const finalOptions: CorsOptions = { ...defaultCorsOptions, ...route.options };
-      
+
       if (route.options?.origin === '*') {
         finalOptions.origin = true;
       }
@@ -134,7 +135,7 @@ async function fastifyCorsPlugin(
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       const origin = request.headers.origin as string;
-      
+
       if (corsOptions.origin) {
         if (typeof corsOptions.origin === 'boolean') {
           if (corsOptions.origin) {
@@ -184,7 +185,7 @@ async function fastifyCorsPlugin(
 
     // Handle actual requests
     const origin = request.headers.origin as string;
-    
+
     if (corsOptions.origin && origin) {
       if (typeof corsOptions.origin === 'boolean') {
         if (corsOptions.origin) {

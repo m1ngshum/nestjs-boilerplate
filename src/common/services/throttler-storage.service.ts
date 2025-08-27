@@ -4,9 +4,7 @@ import Redis, { Cluster } from 'iovalkey';
 import { ThrottlerStorageRedis } from '../interfaces/throttler-storage.interface';
 
 @Injectable()
-export class ThrottlerStorageService
-  implements ThrottlerStorageRedis, OnModuleDestroy
-{
+export class ThrottlerStorageService implements ThrottlerStorageRedis, OnModuleDestroy {
   scriptSrc: string;
   redis: Redis | Cluster;
   disconnectRequired?: boolean;
@@ -121,13 +119,12 @@ export class ThrottlerStorageService
       )) as number[];
 
       if (!Array.isArray(results)) {
-        throw new TypeError(
-          `Expected result to be array of values, got ${results}`,
-        );
+        throw new TypeError(`Expected result to be array of values, got ${results}`);
       }
 
-      const [totalHits, timeToExpire, isBlocked, timeToBlockExpire] =
-        results.map((val) => (typeof val === 'number' ? Math.floor(val) : 0));
+      const [totalHits, timeToExpire, isBlocked, timeToBlockExpire] = results.map((val) =>
+        typeof val === 'number' ? Math.floor(val) : 0,
+      );
 
       return {
         totalHits,

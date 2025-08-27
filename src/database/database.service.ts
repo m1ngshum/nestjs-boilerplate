@@ -66,9 +66,9 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     try {
       const connection = this.getConnection();
       const config = this.configService.database;
-      
+
       const connected = await this.isConnected();
-      
+
       let version: string | undefined;
       let poolSize: number | undefined;
 
@@ -129,8 +129,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const executed = await migrator.getExecutedMigrations();
 
     return {
-      pending: pending.map(m => m.name),
-      executed: executed.map(m => m.name),
+      pending: pending.map((m) => m.name),
+      executed: executed.map((m) => m.name),
     };
   }
 
@@ -239,7 +239,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }> {
     try {
       const info = await this.getDatabaseInfo();
-      
+
       if (!info.connected) {
         return {
           status: 'unhealthy',
@@ -249,7 +249,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       }
 
       const stats = await this.getStatistics();
-      
+
       return {
         status: 'healthy',
         message: 'Database is connected and healthy',

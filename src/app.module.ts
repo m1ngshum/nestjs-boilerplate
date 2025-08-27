@@ -78,8 +78,6 @@ import { SentryModule } from './sentry/sentry.module';
       },
     }),
 
-
-
     // Core modules
     LoggerModule,
     DatabaseModule,
@@ -103,7 +101,7 @@ export class AppModule implements NestModule, OnModuleInit {
     @InjectMikroORM('default') private readonly orm: MikroORM,
     private readonly configService: ConfigurationService,
     private readonly logger: LoggerService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     if (this.configService.database.autoMigrate) {

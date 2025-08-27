@@ -51,10 +51,10 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap((data) => {
         const duration = Date.now() - startTime;
-        
+
         // Log successful response
         this.logger.logRequest(request, response, duration);
-        
+
         // Log response data in debug mode
         if (this.logger['configService']?.isDevelopment()) {
           this.logger.debug('Response Data', {
@@ -66,7 +66,7 @@ export class LoggingInterceptor implements NestInterceptor {
       }),
       catchError((error) => {
         const duration = Date.now() - startTime;
-        
+
         // Log error response
         this.logger.error('Request Error', {
           method,
@@ -134,7 +134,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const sensitiveHeaders = ['authorization', 'cookie', 'x-api-key'];
     const sanitized = { ...headers };
 
-    sensitiveHeaders.forEach(header => {
+    sensitiveHeaders.forEach((header) => {
       if (sanitized[header]) {
         sanitized[header] = '[REDACTED]';
       }
@@ -163,8 +163,8 @@ export class LoggingInterceptor implements NestInterceptor {
 
       for (const [key, value] of Object.entries(obj)) {
         const lowerKey = key.toLowerCase();
-        
-        if (sensitiveFields.some(field => lowerKey.includes(field))) {
+
+        if (sensitiveFields.some((field) => lowerKey.includes(field))) {
           (result as any)[key] = '[REDACTED]';
         } else if (typeof value === 'object' && value !== null) {
           (result as any)[key] = sanitizeObject(value);
@@ -190,7 +190,7 @@ export class LoggingInterceptor implements NestInterceptor {
     // Limit the size of logged response data
     const maxSize = 1000; // characters
     const stringified = JSON.stringify(data);
-    
+
     if (stringified.length > maxSize) {
       return `[Response too large: ${stringified.length} characters]`;
     }

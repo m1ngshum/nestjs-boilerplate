@@ -2,9 +2,7 @@ import { FastifyRequest } from 'fastify';
 import { Address4, Address6 } from 'ip-address';
 import { UAParser } from 'ua-parser-js';
 
-export function getClientIpAndUserAgent(
-  req: FastifyRequest | Record<string, any>,
-): {
+export function getClientIpAndUserAgent(req: FastifyRequest | Record<string, any>): {
   ip?: string;
   userAgent?: string;
 } {
@@ -40,8 +38,5 @@ export function getClientIpAndUserAgent(
 }
 
 export function getPlatform(req?: FastifyRequest): string | undefined {
-  return (req?.headers['sec-ch-ua-platform'] as string | undefined)?.replaceAll(
-    '"',
-    '',
-  );
+  return (req?.headers['sec-ch-ua-platform'] as string | undefined)?.replaceAll('"', '');
 }

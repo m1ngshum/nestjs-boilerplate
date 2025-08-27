@@ -16,12 +16,9 @@ import { LoggerService } from '../logger/logger.service';
       contextName: 'default',
       imports: [ConfigModule],
       inject: [ConfigurationService, LoggerService],
-      useFactory: async (
-        configService: ConfigurationService,
-        loggerService: LoggerService,
-      ) => {
+      useFactory: async (configService: ConfigurationService, loggerService: LoggerService) => {
         const dbConfig = configService.database;
-        
+
         return {
           loadStrategy: LoadStrategy.JOINED,
           discovery: { warnWhenNoEntities: false },
@@ -45,7 +42,10 @@ import { LoggerService } from '../logger/logger.service';
               {
                 name: 'read-replica',
                 host: process.env.DATABASE_READ_REPLICA_HOST,
-                port: parseInt(process.env.DATABASE_READ_REPLICA_PORT || dbConfig.port.toString(), 10),
+                port: parseInt(
+                  process.env.DATABASE_READ_REPLICA_PORT || dbConfig.port.toString(),
+                  10,
+                ),
                 user: process.env.DATABASE_READ_REPLICA_USERNAME || dbConfig.username,
                 password: process.env.DATABASE_READ_REPLICA_PASSWORD || dbConfig.password,
                 dbName: process.env.DATABASE_READ_REPLICA_NAME || dbConfig.database,
@@ -57,20 +57,11 @@ import { LoggerService } from '../logger/logger.service';
         };
       },
     }),
-    
+
     // Register entities for repository injection
     MikroOrmModule.forFeature([]),
   ],
-  providers: [
-    DatabaseService,
-    PaginationService,
-    DatabaseHealthIndicator,
-  ],
-  exports: [
-    DatabaseService,
-    PaginationService,
-    DatabaseHealthIndicator,
-    MikroOrmModule,
-  ],
+  providers: [DatabaseService, PaginationService, DatabaseHealthIndicator],
+  exports: [DatabaseService, PaginationService, DatabaseHealthIndicator, MikroOrmModule],
 })
 export class DatabaseModule {}

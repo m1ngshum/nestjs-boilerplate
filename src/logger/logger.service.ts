@@ -48,9 +48,7 @@ export class LoggerService implements NestLoggerService {
 
     // Add JSON formatting for production, pretty print for development
     if (logConfig.format === 'json' || appConfig.isProduction) {
-      formats.push(
-        winston.format.json(),
-      );
+      formats.push(winston.format.json());
     } else {
       formats.push(
         winston.format.colorize(),
@@ -75,21 +73,23 @@ export class LoggerService implements NestLoggerService {
           handleRejections: true,
         }),
         // Add file transport for production
-        ...(appConfig.isProduction ? [
-          new winston.transports.File({
-            filename: './logs/error.log',
-            level: 'error',
-            handleExceptions: true,
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-          new winston.transports.File({
-            filename: './logs/combined.log',
-            handleExceptions: true,
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-        ] : []),
+        ...(appConfig.isProduction
+          ? [
+              new winston.transports.File({
+                filename: './logs/error.log',
+                level: 'error',
+                handleExceptions: true,
+                maxsize: 5242880, // 5MB
+                maxFiles: 5,
+              }),
+              new winston.transports.File({
+                filename: './logs/combined.log',
+                handleExceptions: true,
+                maxsize: 5242880, // 5MB
+                maxFiles: 5,
+              }),
+            ]
+          : []),
       ],
       exitOnError: false,
     });
@@ -122,14 +122,9 @@ export class LoggerService implements NestLoggerService {
   /**
    * Enhanced logging method
    */
-  private logWithContext(
-    level: string,
-    message: string,
-    meta: any = {},
-    context?: string,
-  ): void {
+  private logWithContext(level: string, message: string, meta: any = {}, context?: string): void {
     const enhancedContext = this.getEnhancedContext();
-    
+
     this.winston.log(level, message, {
       ...enhancedContext,
       ...meta,
@@ -228,8 +223,6 @@ export class LoggerService implements NestLoggerService {
       ip: req.ip || req.connection.remoteAddress,
     };
 
-
-
     const level = res.statusCode >= HttpStatus.BAD_REQUEST ? 'warn' : 'info';
     const message = `${req.method} ${req.url} ${res.statusCode} - ${responseTime}ms`;
 
@@ -288,7 +281,7 @@ export class LoggerService implements NestLoggerService {
   child(additionalContext: Record<string, any>): LoggerService {
     const childLogger = new LoggerService(this.configService, this.cls);
     childLogger.context = this.context;
-    
+
     // Override the getEnhancedContext method to include additional context
     const originalGetEnhancedContext = childLogger.getEnhancedContext.bind(childLogger);
     childLogger.getEnhancedContext = () => ({

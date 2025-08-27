@@ -5,15 +5,7 @@ import { RequestLoggingMiddleware } from './middleware/request-logging.middlewar
 
 @Global()
 @Module({
-  providers: [
-    LoggerService,
-    LoggingInterceptor,
-    RequestLoggingMiddleware,
-  ],
-  exports: [
-    LoggerService,
-    LoggingInterceptor,
-    RequestLoggingMiddleware,
-  ],
+  providers: [LoggerService, LoggingInterceptor, RequestLoggingMiddleware],
+  exports: [LoggerService, LoggingInterceptor, RequestLoggingMiddleware],
 })
 export class LoggerModule {}

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ClsService } from 'nestjs-cls';
@@ -21,9 +16,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
   constructor(private readonly cls: ClsService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
-    return next.handle().pipe(
-      map(data => this.transformResponse(data)),
-    );
+    return next.handle().pipe(map((data) => this.transformResponse(data)));
   }
 
   private transformResponse(data: T): ApiResponse<T> {
@@ -44,12 +37,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
   }
 
   private isAlreadyTransformed(data: any): boolean {
-    return (
-      data &&
-      typeof data === 'object' &&
-      'success' in data &&
-      'timestamp' in data
-    );
+    return data && typeof data === 'object' && 'success' in data && 'timestamp' in data;
   }
 
   private getCorrelationId(): string | undefined {

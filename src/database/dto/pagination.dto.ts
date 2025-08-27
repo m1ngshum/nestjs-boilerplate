@@ -62,7 +62,7 @@ export class PaginationDto {
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value === 'string') {
-      return value.split(',').map(field => field.trim());
+      return value.split(',').map((field) => field.trim());
     }
     return value;
   })

@@ -15,13 +15,13 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
   use(req: FastifyRequest, res: FastifyReply, next: () => void): void {
     const startTime = Date.now();
-    
+
     // Generate or extract correlation ID
-    const correlationId = req.headers['x-correlation-id'] as string || uuidv4();
-    
+    const correlationId = (req.headers['x-correlation-id'] as string) || uuidv4();
+
     // Set correlation ID in CLS context
     this.cls.set('correlationId', correlationId);
-    
+
     // Add correlation ID to response headers
     res.header('x-correlation-id', correlationId);
 
@@ -50,8 +50,8 @@ export class RequestLoggingMiddleware implements NestMiddleware {
    */
   private getClientIp(req: FastifyRequest): string {
     return (
-      req.headers['x-forwarded-for'] as string ||
-      req.headers['x-real-ip'] as string ||
+      (req.headers['x-forwarded-for'] as string) ||
+      (req.headers['x-real-ip'] as string) ||
       req.socket?.remoteAddress ||
       'unknown'
     );

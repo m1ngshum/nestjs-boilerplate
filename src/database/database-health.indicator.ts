@@ -18,7 +18,7 @@ export class DatabaseHealthIndicator {
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     try {
       const healthCheck = await this.databaseService.healthCheck();
-      
+
       if (healthCheck.status === 'healthy') {
         return this.getStatus(key, true, healthCheck.details);
       } else {
@@ -37,7 +37,7 @@ export class DatabaseHealthIndicator {
   async pingCheck(key: string): Promise<HealthIndicatorResult> {
     try {
       const isConnected = await this.databaseService.isConnected();
-      
+
       if (isConnected) {
         return this.getStatus(key, true, { message: 'Database connection successful' });
       } else {
@@ -51,9 +51,9 @@ export class DatabaseHealthIndicator {
   async migrationCheck(key: string): Promise<HealthIndicatorResult> {
     try {
       const migrationStatus = await this.databaseService.getMigrationStatus();
-      
+
       const hasPendingMigrations = migrationStatus.pending.length > 0;
-      
+
       return this.getStatus(key, !hasPendingMigrations, {
         executed: migrationStatus.executed.length,
         pending: migrationStatus.pending.length,
@@ -67,7 +67,7 @@ export class DatabaseHealthIndicator {
   async connectionPoolCheck(key: string): Promise<HealthIndicatorResult> {
     try {
       const stats = await this.databaseService.getStatistics();
-      
+
       // Consider healthy if no connection info available (not critical)
       if (!stats.totalConnections) {
         return this.getStatus(key, true, { message: 'Connection pool info not available' });
@@ -75,7 +75,7 @@ export class DatabaseHealthIndicator {
 
       // Consider unhealthy if all connections are active (potential bottleneck)
       const isHealthy = stats.activeConnections! < stats.totalConnections!;
-      
+
       return this.getStatus(key, isHealthy, {
         totalConnections: stats.totalConnections,
         activeConnections: stats.activeConnections,

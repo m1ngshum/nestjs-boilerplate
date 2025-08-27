@@ -10,7 +10,8 @@ export class AppService {
     return {
       name: appConfig.name,
       version: '1.0.0',
-      description: 'A comprehensive NestJS boilerplate with authentication, logging, database, caching, and more',
+      description:
+        'A comprehensive NestJS boilerplate with authentication, logging, database, caching, and more',
       environment: appConfig.environment,
       timestamp: new Date().toISOString(),
     };

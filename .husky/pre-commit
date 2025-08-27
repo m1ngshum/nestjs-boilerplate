@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+echo "🔍 Running pre-commit checks..."
+
+# Run ESLint
+echo "📝 Running ESLint..."
+pnpm lint && pnpm format:check
+
+echo "✅ Pre-commit checks passed!"

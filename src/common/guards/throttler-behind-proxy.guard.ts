@@ -27,7 +27,7 @@ export class ThrottlerBehindProxyGuard extends ThrottlerGuard {
     // Initialize custom throttler paths from config
     const throttleConfig = this.configService.get('throttle') || {};
     const customPaths = throttleConfig.custom || [];
-    
+
     this.pathToThrottlerMap = new Map(
       customPaths.map((throttler: ThrottlerCustomPath) => [
         throttler.path,
@@ -45,9 +45,7 @@ export class ThrottlerBehindProxyGuard extends ThrottlerGuard {
     return tracker;
   }
 
-  protected async handleRequest(
-    requestProps: ThrottlerRequest,
-  ): Promise<boolean> {
+  protected async handleRequest(requestProps: ThrottlerRequest): Promise<boolean> {
     const { context, ttl, limit, throttler, blockDuration } = requestProps;
     const request = context.switchToHttp().getRequest();
     const customThrottler = this.pathToThrottlerMap.get(request.url);

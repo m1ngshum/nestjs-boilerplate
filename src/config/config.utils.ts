@@ -75,7 +75,10 @@ export function parseFloat(value: string | undefined, defaultValue: number): num
  */
 export function parseArray(value: string | undefined, defaultValue: string[] = []): string[] {
   if (value === undefined) return defaultValue;
-  return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
 }
 
 /**
@@ -136,14 +139,7 @@ export function getDatabaseUrl(): string {
  * Mask sensitive configuration values for logging
  */
 export function maskSensitiveConfig(config: Record<string, any>): Record<string, any> {
-  const sensitiveKeys = [
-    'password',
-    'secret',
-    'key',
-    'token',
-    'dsn',
-    'clientSecret',
-  ];
+  const sensitiveKeys = ['password', 'secret', 'key', 'token', 'dsn', 'clientSecret'];
 
   const masked = { ...config };
 
@@ -161,7 +157,7 @@ export function maskSensitiveConfig(config: Record<string, any>): Record<string,
       const currentPath = path ? `${path}.${key}` : key;
       const lowerKey = key.toLowerCase();
 
-      if (sensitiveKeys.some(sensitiveKey => lowerKey.includes(sensitiveKey))) {
+      if (sensitiveKeys.some((sensitiveKey) => lowerKey.includes(sensitiveKey))) {
         result[key] = typeof value === 'string' && value.length > 0 ? '***MASKED***' : value;
       } else {
         result[key] = maskObject(value, currentPath);
@@ -180,11 +176,11 @@ export function maskSensitiveConfig(config: Record<string, any>): Record<string,
 export function generateSecureSecret(length: number = 32): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
   let result = '';
-  
+
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  
+
   return result;
 }
 

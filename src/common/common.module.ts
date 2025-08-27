@@ -5,15 +5,7 @@ import { ValidationPipe } from './pipes/validation.pipe';
 
 @Global()
 @Module({
-  providers: [
-    GlobalExceptionFilter,
-    TransformInterceptor,
-    ValidationPipe,
-  ],
-  exports: [
-    GlobalExceptionFilter,
-    TransformInterceptor,
-    ValidationPipe,
-  ],
+  providers: [GlobalExceptionFilter, TransformInterceptor, ValidationPipe],
+  exports: [GlobalExceptionFilter, TransformInterceptor, ValidationPipe],
 })
 export class CommonModule {}

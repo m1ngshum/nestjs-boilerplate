@@ -47,7 +47,7 @@ export class HealthService {
       // Add any readiness checks here
       // For example, database connectivity, external service availability
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -59,7 +59,7 @@ export class HealthService {
     try {
       // Basic liveness check
       return process.uptime() > 0;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

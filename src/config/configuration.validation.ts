@@ -17,39 +17,39 @@ function transformToNumber(value: any): number | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined;
   }
-  
+
   if (typeof value === 'number') {
     return value;
   }
-  
+
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (trimmed === '') {
       return undefined;
     }
-    
+
     const parsed = parseInt(trimmed, 10);
     if (isNaN(parsed)) {
       throw new Error(`Cannot convert "${value}" to number`);
     }
-    
+
     return parsed;
   }
-  
+
   throw new Error(`Cannot convert ${typeof value} to number`);
 }
 
 function transformToOptionalPort(value: any): number | undefined {
   const transformed = transformToNumber(value);
-  
+
   if (transformed === undefined) {
     return undefined;
   }
-  
+
   if (transformed < 1 || transformed > 65535) {
     throw new Error(`Port number must be between 1 and 65535, got ${transformed}`);
   }
-  
+
   return transformed;
 }
 
@@ -57,11 +57,11 @@ function transformToBoolean(value: any): boolean | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined;
   }
-  
+
   if (typeof value === 'boolean') {
     return value;
   }
-  
+
   if (typeof value === 'string') {
     const trimmed = value.trim().toLowerCase();
     if (trimmed === 'true' || trimmed === '1' || trimmed === 'yes') {
@@ -74,7 +74,7 @@ function transformToBoolean(value: any): boolean | undefined {
       return undefined;
     }
   }
-  
+
   throw new Error(`Cannot convert "${value}" to boolean`);
 }
 
@@ -82,11 +82,11 @@ function transformToBooleanDefaultTrue(value: any): boolean | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined;
   }
-  
+
   if (typeof value === 'boolean') {
     return value;
   }
-  
+
   if (typeof value === 'string') {
     const trimmed = value.trim().toLowerCase();
     if (trimmed === 'false' || trimmed === '0' || trimmed === 'no') {
@@ -96,18 +96,18 @@ function transformToBooleanDefaultTrue(value: any): boolean | undefined {
       return true;
     }
   }
-  
+
   // Default to true for any other value
   return true;
 }
 
 function transformToRequiredNumber(value: any): number {
   const transformed = transformToNumber(value);
-  
+
   if (transformed === undefined) {
     throw new Error('Required number field cannot be empty');
   }
-  
+
   return transformed;
 }
 
@@ -136,8 +136,6 @@ class DatabaseConfigDto {
   @IsString()
   @IsNotEmpty()
   DATABASE_NAME: string = '';
-
-
 
   @IsBoolean()
   @IsOptional()
@@ -438,14 +436,19 @@ function getFieldSuggestion(fieldName: string, value: any): string {
     DATABASE_PASSWORD: 'Set DATABASE_PASSWORD to your database password',
     DATABASE_NAME: 'Set DATABASE_NAME to your database name',
     JWT_SECRET: 'Set JWT_SECRET to a secure random string (at least 32 characters)',
-    REDIS_PORT: 'Set REDIS_PORT to a valid port number (e.g., 6379) or leave empty to disable Redis',
-    VALKEY_CLUSTER_PORT: 'Set VALKEY_CLUSTER_PORT to a valid port number or leave empty to disable Valkey',
+    REDIS_PORT:
+      'Set REDIS_PORT to a valid port number (e.g., 6379) or leave empty to disable Redis',
+    VALKEY_CLUSTER_PORT:
+      'Set VALKEY_CLUSTER_PORT to a valid port number or leave empty to disable Valkey',
     NODE_ENV: 'Set NODE_ENV to one of: development, production, test',
     LOG_LEVEL: 'Set LOG_LEVEL to one of: error, warn, info, debug, verbose',
     LOG_FORMAT: 'Set LOG_FORMAT to either "json" or "simple"',
   };
 
-  return suggestions[fieldName] || `Check the value for ${fieldName} and ensure it meets the validation requirements`;
+  return (
+    suggestions[fieldName] ||
+    `Check the value for ${fieldName} and ensure it meets the validation requirements`
+  );
 }
 
 export function validateConfiguration(config: Record<string, unknown>) {
@@ -463,7 +466,7 @@ export function validateConfiguration(config: Record<string, unknown>) {
         const constraints = error.constraints ? Object.values(error.constraints) : [];
         const currentValue = error.value !== undefined ? error.value : 'undefined';
         const suggestion = getFieldSuggestion(error.property, error.value);
-        
+
         return [
           `${error.property}: ${constraints.join(', ')}`,
           `  Current value: "${currentValue}"`,
@@ -486,9 +489,11 @@ export function validateConfiguration(config: Record<string, unknown>) {
   } catch (error) {
     // If it's a transformation error, provide a more helpful message
     if (error instanceof Error && error.message.includes('Cannot convert')) {
-      throw new Error(`Configuration transformation failed: ${error.message}\n\nPlease check your .env file for invalid values.`);
+      throw new Error(
+        `Configuration transformation failed: ${error.message}\n\nPlease check your .env file for invalid values.`,
+      );
     }
-    
+
     // Re-throw other errors as-is
     throw error;
   }

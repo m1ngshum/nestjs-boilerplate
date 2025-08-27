@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
@@ -20,10 +15,7 @@ export class MethodLoggingInterceptor implements NestInterceptor {
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const logOptions = this.reflector.get<LogOptions>(
-      LOG_METADATA_KEY,
-      context.getHandler(),
-    );
+    const logOptions = this.reflector.get<LogOptions>(LOG_METADATA_KEY, context.getHandler());
 
     if (!logOptions) {
       return next.handle();
@@ -53,7 +45,7 @@ export class MethodLoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap((result) => {
         const duration = Date.now() - startTime;
-        
+
         // Log method completion
         const completionMessage = `${methodName} completed`;
         methodLogger[logOptions.level || 'info'](completionMessage, {
@@ -71,7 +63,7 @@ export class MethodLoggingInterceptor implements NestInterceptor {
       }),
       catchError((error) => {
         const duration = Date.now() - startTime;
-        
+
         if (logOptions.logErrors !== false) {
           methodLogger.error(`${methodName} failed`, {
             error: {
@@ -101,11 +93,11 @@ export class MethodLoggingInterceptor implements NestInterceptor {
         if (arg.constructor?.name === 'FastifyReply') {
           return '[FastifyReply]';
         }
-        
+
         // Sanitize regular objects
         return this.sanitizeObject(arg);
       }
-      
+
       return arg;
     });
   }
@@ -149,8 +141,8 @@ export class MethodLoggingInterceptor implements NestInterceptor {
 
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
-      
-      if (sensitiveFields.some(field => lowerKey.includes(field))) {
+
+      if (sensitiveFields.some((field) => lowerKey.includes(field))) {
         (sanitized as any)[key] = '[REDACTED]';
       } else if (typeof value === 'object' && value !== null) {
         (sanitized as any)[key] = this.sanitizeObject(value);

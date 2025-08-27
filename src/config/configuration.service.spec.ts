@@ -114,7 +114,7 @@ describe('ConfigurationService', () => {
     it('should check if Sentry is enabled', () => {
       process.env.SENTRY_DSN = 'https://test@sentry.io/123';
       expect(service.isFeatureEnabled('sentry')).toBe(true);
-      
+
       delete process.env.SENTRY_DSN;
       expect(service.isFeatureEnabled('sentry')).toBe(false);
     });
@@ -122,7 +122,7 @@ describe('ConfigurationService', () => {
     it('should check if Redis is enabled', () => {
       process.env.REDIS_HOST = 'localhost';
       expect(service.isFeatureEnabled('redis')).toBe(true);
-      
+
       delete process.env.REDIS_HOST;
       expect(service.isFeatureEnabled('redis')).toBe(false);
     });
@@ -131,7 +131,7 @@ describe('ConfigurationService', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
       expect(service.isFeatureEnabled('googleAuth')).toBe(true);
-      
+
       delete process.env.GOOGLE_CLIENT_ID;
       delete process.env.GOOGLE_CLIENT_SECRET;
       expect(service.isFeatureEnabled('googleAuth')).toBe(false);
@@ -143,7 +143,7 @@ describe('ConfigurationService', () => {
       process.env.GOOGLE_CLIENT_ID = 'test-client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
       process.env.APP_URL = 'http://localhost:3000';
-      
+
       const googleConfig = service.getGoogleOAuthConfig();
       expect(googleConfig).toBeDefined();
       expect(googleConfig?.clientID).toBe('test-client-id');
@@ -154,7 +154,7 @@ describe('ConfigurationService', () => {
     it('should return null when Google OAuth is not configured', () => {
       delete process.env.GOOGLE_CLIENT_ID;
       delete process.env.GOOGLE_CLIENT_SECRET;
-      
+
       const googleConfig = service.getGoogleOAuthConfig();
       expect(googleConfig).toBeNull();
     });
@@ -164,7 +164,7 @@ describe('ConfigurationService', () => {
     it('should return Sentry config when enabled', () => {
       process.env.SENTRY_DSN = 'https://test@sentry.io/123';
       process.env.SENTRY_ENVIRONMENT = 'test';
-      
+
       const sentryConfig = service.getSentryConfig();
       expect(sentryConfig).toBeDefined();
       expect(sentryConfig?.dsn).toBe('https://test@sentry.io/123');
@@ -173,7 +173,7 @@ describe('ConfigurationService', () => {
 
     it('should return null when Sentry is not configured', () => {
       delete process.env.SENTRY_DSN;
-      
+
       const sentryConfig = service.getSentryConfig();
       expect(sentryConfig).toBeNull();
     });

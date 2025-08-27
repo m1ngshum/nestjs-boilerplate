@@ -8,10 +8,7 @@ export const CACHE_INSTANCE = 'CACHE_INSTANCE';
 export const ValkeyProvider: Provider = {
   provide: CACHE_INSTANCE,
   inject: [ConfigurationService, LoggerService],
-  useFactory: (
-    configService: ConfigurationService,
-    logger: LoggerService,
-  ): Redis | Cluster => {
+  useFactory: (configService: ConfigurationService, logger: LoggerService): Redis | Cluster => {
     const isDevelopment = configService.isDevelopment();
     const cacheConfig = configService.cache;
 

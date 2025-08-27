@@ -19,8 +19,4 @@ export * from './utils/database.utils';
 export { default as mikroOrmConfig } from './mikro-orm.config';
 
 // Types and interfaces
-export type {
-  PaginationOptions,
-  PaginatedResult,
-  PaginationMeta,
-} from './pagination.service';
+export type { PaginationOptions, PaginatedResult, PaginationMeta } from './pagination.service';

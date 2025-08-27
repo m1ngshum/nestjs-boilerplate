@@ -49,27 +49,24 @@ export class SoftDeleteUtils {
     entities: T | T[],
   ): Promise<void> {
     const entitiesArray = Array.isArray(entities) ? entities : [entities];
-    
-    entitiesArray.forEach(entity => {
+
+    entitiesArray.forEach((entity) => {
       entity.softDelete();
     });
-    
+
     await em.flush();
   }
 
   /**
    * Restore soft deleted entities
    */
-  static async restore<T extends BaseEntity>(
-    em: EntityManager,
-    entities: T | T[],
-  ): Promise<void> {
+  static async restore<T extends BaseEntity>(em: EntityManager, entities: T | T[]): Promise<void> {
     const entitiesArray = Array.isArray(entities) ? entities : [entities];
-    
-    entitiesArray.forEach(entity => {
+
+    entitiesArray.forEach((entity) => {
       entity.restore();
     });
-    
+
     await em.flush();
   }
 }
@@ -97,22 +94,22 @@ export class TransactionUtils {
     delay: number = 1000,
   ): Promise<T> {
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error as Error;
-        
+
         if (attempt === maxRetries) {
           throw lastError;
         }
-        
+
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, delay * attempt));
+        await new Promise((resolve) => global.setTimeout(resolve, delay * attempt));
       }
     }
-    
+
     throw lastError!;
   }
 }
@@ -124,15 +121,12 @@ export class QueryUtils {
   /**
    * Build ILIKE search condition for multiple fields
    */
-  static buildSearchCondition<T>(
-    searchTerm: string,
-    fields: (keyof T)[],
-  ): FilterQuery<T> {
+  static buildSearchCondition<T>(searchTerm: string, fields: (keyof T)[]): FilterQuery<T> {
     if (!searchTerm || fields.length === 0) {
       return {} as FilterQuery<T>;
     }
 
-    const conditions = fields.map(field => ({
+    const conditions = fields.map((field) => ({
       [field]: { $ilike: `%${searchTerm}%` },
     }));
 
@@ -163,10 +157,7 @@ export class QueryUtils {
   /**
    * Build IN condition for array values
    */
-  static buildInCondition<T>(
-    field: keyof T,
-    values: any[],
-  ): FilterQuery<T> {
+  static buildInCondition<T>(field: keyof T, values: any[]): FilterQuery<T> {
     if (!values || values.length === 0) {
       return {} as FilterQuery<T>;
     }
@@ -177,13 +168,14 @@ export class QueryUtils {
   /**
    * Combine multiple filter conditions
    */
-  static combineConditions<T>(
-    ...conditions: FilterQuery<T>[]
-  ): FilterQuery<T> {
-    return conditions.reduce((combined, condition) => ({
-      ...combined,
-      ...condition,
-    }), {} as FilterQuery<T>);
+  static combineConditions<T>(...conditions: FilterQuery<T>[]): FilterQuery<T> {
+    return conditions.reduce(
+      (combined, condition) => ({
+        ...combined,
+        ...condition,
+      }),
+      {} as FilterQuery<T>,
+    );
   }
 }
 
@@ -217,7 +209,10 @@ export class ValidationUtils {
   /**
    * Validate pagination parameters
    */
-  static validatePaginationParams(page: number, limit: number): {
+  static validatePaginationParams(
+    page: number,
+    limit: number,
+  ): {
     page: number;
     limit: number;
   } {
@@ -256,21 +251,18 @@ export class PerformanceUtils {
     const start = Date.now();
     const result = await operation();
     const duration = Date.now() - start;
-    
+
     if (label) {
       console.log(`${label} took ${duration}ms`);
     }
-    
+
     return { result, duration };
   }
 
   /**
    * Create optimized find options for large datasets
    */
-  static createOptimizedFindOptions<T>(
-    limit: number = 1000,
-    fields?: (keyof T)[],
-  ): FindOptions<T> {
+  static createOptimizedFindOptions<T>(limit: number = 1000, fields?: (keyof T)[]): FindOptions<T> {
     const options: FindOptions<T> = {
       limit,
       // Disable lazy loading for better performance

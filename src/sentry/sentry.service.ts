@@ -3,8 +3,6 @@ import * as Sentry from '@sentry/nestjs';
 import { ConfigurationService } from '../config/configuration.service';
 import { LoggerService } from '../logger/logger.service';
 
-
-
 export interface SentryContext {
   [key: string]: any;
 }
@@ -76,8 +74,6 @@ export class SentryService {
       return undefined;
     }
   }
-
-
 
   /**
    * Set tag

@@ -22,7 +22,7 @@ export class RedisHealthIndicator {
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const cacheConfig = this.configService.cache;
-    
+
     if (cacheConfig.type !== 'redis' || !this.valkey) {
       return this.getStatus(key, true, { message: 'Redis cache is disabled' });
     }
@@ -47,7 +47,7 @@ export class RedisHealthIndicator {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       return this.getStatus(key, false, {
         message: 'Valkey connection failed',
         error: errorMessage,

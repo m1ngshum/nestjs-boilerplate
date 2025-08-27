@@ -10,7 +10,10 @@ export class AppController {
   @Get()
   @Version('1')
   @ApiOperation({ summary: 'Get application information' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Application information retrieved successfully' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Application information retrieved successfully',
+  })
   getAppInfo() {
     return this.appService.getAppInfo();
   }

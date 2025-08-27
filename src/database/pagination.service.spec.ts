@@ -71,11 +71,14 @@ describe('PaginationService', () => {
       });
 
       expect(mockRepository.count).toHaveBeenCalledWith({});
-      expect(mockRepository.find).toHaveBeenCalledWith({}, {
-        limit: 10,
-        offset: 0,
-        orderBy: { createdAt: 'DESC' },
-      });
+      expect(mockRepository.find).toHaveBeenCalledWith(
+        {},
+        {
+          limit: 10,
+          offset: 0,
+          orderBy: { createdAt: 'DESC' },
+        },
+      );
     });
 
     it('should paginate with custom options', async () => {
@@ -88,11 +91,14 @@ describe('PaginationService', () => {
 
       await service.paginateRepository(mockRepository as any, options);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({}, {
-        limit: 5,
-        offset: 5,
-        orderBy: { email: 'ASC' },
-      });
+      expect(mockRepository.find).toHaveBeenCalledWith(
+        {},
+        {
+          limit: 5,
+          offset: 5,
+          orderBy: { email: 'ASC' },
+        },
+      );
     });
 
     it('should handle search functionality', async () => {
@@ -104,10 +110,7 @@ describe('PaginationService', () => {
       await service.paginateRepository(mockRepository as any, options);
 
       expect(mockRepository.count).toHaveBeenCalledWith({
-        $or: [
-          { email: { $ilike: '%john%' } },
-          { firstName: { $ilike: '%john%' } },
-        ],
+        $or: [{ email: { $ilike: '%john%' } }, { firstName: { $ilike: '%john%' } }],
       });
     });
 
@@ -129,7 +132,7 @@ describe('PaginationService', () => {
 
     it('should calculate pagination metadata correctly', async () => {
       mockRepository.count.mockResolvedValue(25);
-      
+
       const options = { page: 2, limit: 10 };
       const result = await service.paginateRepository(mockRepository as any, options);
 
@@ -150,9 +153,12 @@ describe('PaginationService', () => {
 
       await service.paginateRepository(mockRepository as any, options);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({}, expect.objectContaining({
-        limit: 100,
-      }));
+      expect(mockRepository.find).toHaveBeenCalledWith(
+        {},
+        expect.objectContaining({
+          limit: 100,
+        }),
+      );
     });
 
     it('should enforce minimum page number', async () => {
@@ -160,9 +166,12 @@ describe('PaginationService', () => {
 
       await service.paginateRepository(mockRepository as any, options);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({}, expect.objectContaining({
-        offset: 0, // page 1
-      }));
+      expect(mockRepository.find).toHaveBeenCalledWith(
+        {},
+        expect.objectContaining({
+          offset: 0, // page 1
+        }),
+      );
     });
   });
 

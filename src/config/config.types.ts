@@ -127,10 +127,7 @@ export const CONFIG_CONSTANTS = {
 /**
  * Required environment variables
  */
-export const REQUIRED_ENV_VARS = [
-  'JWT_SECRET',
-  'DATABASE_URL',
-] as const;
+export const REQUIRED_ENV_VARS = ['JWT_SECRET', 'DATABASE_URL'] as const;
 
 /**
  * Optional environment variables with defaults

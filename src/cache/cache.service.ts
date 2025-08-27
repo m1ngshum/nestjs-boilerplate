@@ -57,12 +57,7 @@ export class CacheService {
       let result: string;
 
       if (unixTimestamp) {
-        result = await this.valkey.set(
-          key,
-          valueString,
-          'EXAT',
-          unixTimestamp,
-        );
+        result = await this.valkey.set(key, valueString, 'EXAT', unixTimestamp);
       } else if (ttl) {
         result = await this.valkey.set(key, valueString, 'EX', ttl);
       } else {
@@ -110,18 +105,15 @@ export class CacheService {
   async mget<T>(keys: string[]): Promise<(T | null)[]> {
     if (keys.length === 0) return [];
 
-    const chunks = Array.from(
-      { length: Math.ceil(keys.length / this.BATCH_SIZE) },
-      (_, i) => keys.slice(i * this.BATCH_SIZE, (i + 1) * this.BATCH_SIZE),
+    const chunks = Array.from({ length: Math.ceil(keys.length / this.BATCH_SIZE) }, (_, i) =>
+      keys.slice(i * this.BATCH_SIZE, (i + 1) * this.BATCH_SIZE),
     );
 
     try {
       const results = await Promise.all(
         chunks.map(async (chunk) => {
           const values = await this.valkey.mget(chunk);
-          return values.map((value) =>
-            value ? (JSON.parse(value) as T) : null,
-          );
+          return values.map((value) => (value ? (JSON.parse(value) as T) : null));
         }),
       );
       return results.flat();
@@ -164,20 +156,16 @@ export class CacheService {
   /**
    * Get or set pattern - if key exists return it, otherwise set and return new value
    */
-  async getOrSet<T>(
-    key: string,
-    factory: () => Promise<T> | T,
-    ttl?: number,
-  ): Promise<T> {
+  async getOrSet<T>(key: string, factory: () => Promise<T> | T, ttl?: number): Promise<T> {
     try {
       let value = await this.get<T>(key);
-      
+
       if (value === null) {
         value = await factory();
         await this.set(key, value, { ttl });
         this.logger.debug(`Cache MISS -> SET: ${key}`);
       }
-      
+
       return value;
     } catch (error) {
       this.logger.error(`Cache getOrSet error for key ${key}:`, error);
@@ -189,11 +177,7 @@ export class CacheService {
   /**
    * Wrap a function with caching
    */
-  wrap<T>(
-    key: string,
-    fn: () => Promise<T> | T,
-    ttl?: number,
-  ): Promise<T> {
+  wrap<T>(key: string, fn: () => Promise<T> | T, ttl?: number): Promise<T> {
     return this.getOrSet(key, fn, ttl);
   }
 
@@ -207,11 +191,7 @@ export class CacheService {
   /**
    * Count items in sorted set
    */
-  async zcount(
-    key: string,
-    min: number | string,
-    max: number | string,
-  ): Promise<number> {
+  async zcount(key: string, min: number | string, max: number | string): Promise<number> {
     try {
       return await this.valkey.zcount(key, min, max);
     } catch (error) {
