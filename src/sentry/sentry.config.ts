@@ -20,7 +20,7 @@ Sentry.init({
   // Additional options
   beforeSend(event) {
     // Filter out health check errors and other noise
-    if (event.request?.url?.includes('/health')) {
+    if (event.request?.url?.includes('/healthz')) {
       return null;
     }
     
