@@ -156,7 +156,7 @@ export interface AppConfiguration {
 
 export default registerAs('config', (): AppConfiguration => {
   const nodeEnv = process.env.NODE_ENV || 'development';
-  
+
   return {
     app: {
       name: process.env.APP_NAME || 'nestjs-boilerplate',
@@ -168,7 +168,7 @@ export default registerAs('config', (): AppConfiguration => {
       isProduction: nodeEnv === 'production',
       isTest: nodeEnv === 'test',
     },
-    
+
     database: {
       type: 'postgres' as const,
       host: process.env.DATABASE_HOST || 'localhost',
@@ -181,33 +181,36 @@ export default registerAs('config', (): AppConfiguration => {
       ssl: process.env.DATABASE_SSL === 'true',
       autoMigrate: process.env.DATABASE_AUTO_MIGRATE === 'true',
     },
-    
+
     auth: {
       jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
       jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key',
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
-      enableGoogleAuth: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? true : false,
+      enableGoogleAuth:
+        process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? true : false,
       googleClientId: process.env.GOOGLE_CLIENT_ID,
       googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
-    
+
     cache: {
-      type: (process.env.VALKEY_CLUSTER_HOST || process.env.REDIS_HOST ? 'redis' : 'memory') as 'redis' | 'memory',
+      type: (process.env.VALKEY_CLUSTER_HOST || process.env.REDIS_HOST ? 'redis' : 'memory') as
+        | 'redis'
+        | 'memory',
       host: process.env.VALKEY_CLUSTER_HOST || process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.VALKEY_CLUSTER_PORT || process.env.REDIS_PORT || '6379', 10),
       password: process.env.REDIS_PASSWORD,
       db: parseInt(process.env.REDIS_DB || '0', 10),
       ttl: parseInt(process.env.CACHE_TTL || '300', 10), // 5 minutes default
     },
-    
+
     valkey: {
       cluster: {
         host: process.env.VALKEY_CLUSTER_HOST || 'localhost',
         port: parseInt(process.env.VALKEY_CLUSTER_PORT || '6379', 10),
       },
     },
-    
+
     sentry: {
       dsn: process.env.SENTRY_DSN,
       environment: process.env.SENTRY_ENVIRONMENT || nodeEnv,
@@ -215,13 +218,24 @@ export default registerAs('config', (): AppConfiguration => {
       tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
       profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
     },
-    
+
     cors: {
       origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
       credentials: process.env.CORS_CREDENTIALS === 'true',
-      methods: process.env.CORS_METHODS?.split(',') || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: process.env.CORS_ALLOWED_HEADERS?.split(',') || ['Content-Type', 'Authorization', 'Accept'],
-      
+      methods: process.env.CORS_METHODS?.split(',') || [
+        'GET',
+        'POST',
+        'PUT',
+        'DELETE',
+        'PATCH',
+        'OPTIONS',
+      ],
+      allowedHeaders: process.env.CORS_ALLOWED_HEADERS?.split(',') || [
+        'Content-Type',
+        'Authorization',
+        'Accept',
+      ],
+
       // Advanced CORS configuration for route-specific handling
       production: process.env.CORS_PRODUCTION_DOMAINS?.split(',') || [],
       testing: [
@@ -231,19 +245,19 @@ export default registerAs('config', (): AppConfiguration => {
         /localhost:\d+/,
         'http://localhost:3000',
         'http://localhost:3001',
-        ...(process.env.CORS_TESTING_DOMAINS?.split(',') || [])
+        ...(process.env.CORS_TESTING_DOMAINS?.split(',') || []),
       ],
       routes: [
         // Example route-specific CORS configuration
         {
-          path: '/api/v1/public',
+          path: '/v1/public',
           options: { origin: '*' },
         },
         // Add more route-specific configurations from environment
         ...JSON.parse(process.env.CORS_ROUTES_JSON || '[]'),
       ],
     },
-    
+
     throttle: {
       ttl: parseInt(process.env.THROTTLE_TTL || '60', 10) * 1000, // Convert to milliseconds
       limit: parseInt(process.env.THROTTLE_LIMIT || '10', 10),
@@ -253,26 +267,26 @@ export default registerAs('config', (): AppConfiguration => {
       blockDuration: parseInt(process.env.THROTTLE_BLOCK_DURATION || '300', 10), // 5 minutes
       custom: JSON.parse(process.env.THROTTLE_CUSTOM_PATHS || '[]'),
     },
-    
+
     swagger: {
       enabled: process.env.SWAGGER_ENABLED !== 'false',
       title: process.env.SWAGGER_TITLE || 'NestJS Boilerplate API',
       description: process.env.SWAGGER_DESCRIPTION || 'A comprehensive NestJS boilerplate API',
       version: process.env.SWAGGER_VERSION || '1.0.0',
-      path: process.env.SWAGGER_PATH || 'api/docs',
+      path: process.env.SWAGGER_PATH || 'docs',
     },
-    
+
     health: {
       enabled: process.env.HEALTH_CHECK_ENABLED !== 'false',
       databaseEnabled: process.env.HEALTH_CHECK_DATABASE_ENABLED !== 'false',
       redisEnabled: process.env.HEALTH_CHECK_REDIS_ENABLED !== 'false' && !!process.env.REDIS_HOST,
     },
-    
+
     log: {
       level: process.env.LOG_LEVEL || 'info',
       format: (process.env.LOG_FORMAT as 'json' | 'simple') || 'json',
     },
-    
+
     security: {
       hsts: {
         enabled: process.env.SECURITY_HSTS_ENABLED !== 'false',
@@ -285,7 +299,10 @@ export default registerAs('config', (): AppConfiguration => {
         reportOnly: process.env.SECURITY_CSP_REPORT_ONLY === 'true',
         directives: {
           defaultSrc: process.env.SECURITY_CSP_DEFAULT_SRC?.split(',') || [`'self'`],
-          scriptSrc: process.env.SECURITY_CSP_SCRIPT_SRC?.split(',') || [`'self'`, `'unsafe-inline'`],
+          scriptSrc: process.env.SECURITY_CSP_SCRIPT_SRC?.split(',') || [
+            `'self'`,
+            `'unsafe-inline'`,
+          ],
           styleSrc: process.env.SECURITY_CSP_STYLE_SRC?.split(',') || [`'self'`, `'unsafe-inline'`],
           imgSrc: process.env.SECURITY_CSP_IMG_SRC?.split(',') || [`'self'`, 'data:', 'https:'],
           fontSrc: process.env.SECURITY_CSP_FONT_SRC?.split(',') || [`'self'`, 'https:', 'data:'],

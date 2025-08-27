@@ -55,10 +55,8 @@ async function bootstrap() {
   app.useLogger(logger);
   console.log('✅ Logger configured');
 
-  console.log('🌐 Setting global prefix...');
-  // Global prefix
-  app.setGlobalPrefix('api');
-  console.log('✅ Global prefix set');
+  // Global prefix removed - routes will be accessible without /api prefix
+  console.log('✅ Global prefix removed');
 
   console.log('🔢 Enabling API versioning...');
   // API versioning

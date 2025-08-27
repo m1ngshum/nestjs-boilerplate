@@ -177,7 +177,7 @@ export class ConfigurationService {
     return {
       clientID: this.auth.googleClientId!,
       clientSecret: this.auth.googleClientSecret!,
-      callbackURL: `${this.app.url}/api/v1/auth/google/callback`,
+      callbackURL: `${this.app.url}/v1/auth/google/callback`,
     };
   }
 
