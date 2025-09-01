@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { MikroORM, EntityManager, Connection } from '@mikro-orm/core';
+import { MikroORM, EntityManager, Connection } from '@mikro-orm/postgresql';
 import { InjectMikroORM } from '@mikro-orm/nestjs';
 import { ConfigurationService } from '../config/configuration.service';
 

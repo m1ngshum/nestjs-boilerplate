@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigurationService } from '../config/configuration.service';
-import { LoadStrategy, Utils } from '@mikro-orm/core';
+import { LoadStrategy, Utils } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { DatabaseService } from './database.service';

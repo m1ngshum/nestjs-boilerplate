@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager, EntityRepository, FindOptions, FilterQuery } from '@mikro-orm/core';
+import {
+  EntityManager,
+  EntityRepository,
+  FindOptions,
+  FilterQuery,
+  MikroORM,
+} from '@mikro-orm/postgresql';
 import { InjectMikroORM } from '@mikro-orm/nestjs';
-import { MikroORM } from '@mikro-orm/core';
 
 export interface PaginationOptions {
   page?: number;

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MikroORM, EntityRepository } from '@mikro-orm/core';
+import { MikroORM, EntityRepository } from '@mikro-orm/postgresql';
 import { PaginationService } from './pagination.service';
 import { BaseEntity } from './entities/base.entity';
 
