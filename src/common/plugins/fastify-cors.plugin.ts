@@ -224,15 +224,7 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
 }
 
 function getAllowedDomains(configService: ConfigurationService, env: string): (string | RegExp)[] {
-  const prodDomains = configService.cors.production || [];
-  const testDomains = configService.cors.testing || [];
-
-  let allowed: (string | RegExp)[] = [...prodDomains];
-  if (['development', 'staging', 'test', 'sandbox'].includes(env)) {
-    allowed = [...new Set([...allowed, ...testDomains])];
-  }
-
-  return allowed;
+  return configService.cors.domains || [];
 }
 
 export default fp(fastifyCorsPlugin, {

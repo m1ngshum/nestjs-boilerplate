@@ -1,21 +1,22 @@
+# Production Docker ignore file
+# Optimized for minimal image size and security
+
 # Dependencies
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store
 
-# Build outputs
+# Build outputs (will be built in container)
 dist
 build
 *.tsbuildinfo
 
-# Environment files (will be copied separately)
-.env
-.env.local
-.env.development
-.env.test
-.env.production
+# Environment files (handled by ECS/secrets)
+.env*
+!.env.example
 
 # Development files
 .git
@@ -24,6 +25,7 @@ README.md
 CHANGELOG.md
 LICENSE
 *.md
+docs/
 
 # IDE and editor files
 .vscode
@@ -48,6 +50,8 @@ test
 tests
 **/*.spec.ts
 **/*.test.ts
+**/*.spec.js
+**/*.test.js
 
 # Logs
 logs
@@ -59,7 +63,7 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage
 *.lcov
 
@@ -87,7 +91,7 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# Parcel cache
 .cache
 .parcel-cache
 
@@ -105,10 +109,126 @@ jspm_packages/
 tmp/
 temp/
 
-# Docker files
-Dockerfile*
-docker-compose*
+# Docker files (except production)
+Dockerfile
+docker-compose*.yml
 .dockerignore
 
-# Scripts
+# Scripts (not needed in production)
 scripts/
+
+# GitHub workflows
+.github/
+
+# CI/CD files
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+
+# Lock files (keep pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+
+# Husky files
+.husky/
+
+# Lint staged
+.lintstagedrc*
+
+# Prettier
+.prettierrc*
+.prettierignore
+
+# ESLint
+.eslintrc*
+.eslintignore
+
+# Jest
+jest.config.*
+jest.setup.*
+
+# Babel
+.babelrc*
+babel.config.*
+
+# Webpack
+webpack.config.*
+
+# Rollup
+rollup.config.*
+
+# Vite
+vite.config.*
+
+# Turbo
+turbo.json
+
+# Nx
+nx.json
+.nx/
+
+# Lerna
+lerna.json
+
+# Rush
+rush.json
+common/
+
+# Rushstack
+rushstack.json
+
+# Rushstack build cache
+common/temp/
+
+# Rushstack build outputs
+lib/
+lib-commonjs/
+lib-esm/
+
+# Rushstack test outputs
+lib-test/
+
+# Rushstack temp
+temp/
+
+# Rushstack node_modules
+node_modules/
+
+# Rushstack package manager
+common/autoinstallers/
+
+# Rushstack build cache
+common/temp/
+
+# Rushstack build outputs
+lib/
+lib-commonjs/
+lib-esm/
+
+# Rushstack test outputs
+lib-test/
+
+# Rushstack temp
+temp/
+
+# Rushstack node_modules
+node_modules/
+
+# Rushstack package manager
+common/autoinstallers/
