@@ -66,6 +66,7 @@ export interface CorsConfig {
 }
 
 export interface AdvancedCorsConfig {
+  domains?: (string | RegExp)[];
   production: (string | RegExp)[];
   testing: (string | RegExp)[];
   routes: Array<{
@@ -237,6 +238,7 @@ export default registerAs('config', (): AppConfiguration => {
       ],
 
       // Advanced CORS configuration for route-specific handling
+      domains: process.env.CORS_DOMAINS?.split(',') || [],
       production: process.env.CORS_PRODUCTION_DOMAINS?.split(',') || [],
       testing: [
         `localhost:${process.env.APP_PORT || 3000}`,
