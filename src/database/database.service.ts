@@ -22,10 +22,41 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Get EntityManager instance
+   * Get EntityManager instance (default/master connection)
    */
   getEntityManager(): EntityManager {
     return this.orm.em;
+  }
+
+  /**
+   * Get read connection (MikroORM automatically handles replica selection)
+   * Per MikroORM docs: read connections are automatically used for SELECT/COUNT queries outside transactions
+   */
+  getReadConnection() {
+    return this.orm.em.getConnection('read');
+  }
+
+  /**
+   * Get write connection (always the master)
+   */
+  getWriteConnection() {
+    return this.orm.em.getConnection('write');
+  }
+
+  /**
+   * Check if read replicas are configured
+   */
+  hasReadReplicas(): boolean {
+    const config = this.orm.config as any;
+    return !!(config.replicas && config.replicas.length > 0);
+  }
+
+  /**
+   * Get number of configured read replicas
+   */
+  getReadReplicaCount(): number {
+    const config = this.orm.config as any;
+    return config.replicas?.length || 0;
   }
 
   /**

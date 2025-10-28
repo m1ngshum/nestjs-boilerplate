@@ -1,5 +1,14 @@
 import { registerAs } from '@nestjs/config';
 
+export interface ReadReplicaConfig {
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  database?: string;
+  weight?: number;
+}
+
 export interface DatabaseConfig {
   type: 'postgres';
   host: string;
@@ -11,6 +20,7 @@ export interface DatabaseConfig {
   logging: boolean;
   ssl: boolean;
   autoMigrate: boolean;
+  readReplicas?: ReadReplicaConfig[];
 }
 
 export interface AuthConfig {
@@ -181,6 +191,32 @@ export default registerAs('config', (): AppConfiguration => {
       logging: process.env.DATABASE_LOGGING === 'true' || nodeEnv === 'development',
       ssl: process.env.DATABASE_SSL === 'true',
       autoMigrate: process.env.DATABASE_AUTO_MIGRATE === 'true',
+      readReplicas: (() => {
+        const replicasEnv = process.env.DATABASE_READ_REPLICAS;
+        if (!replicasEnv) {
+          if (process.env.DATABASE_READ_REPLICA_HOST) {
+            return [
+              {
+                host: process.env.DATABASE_READ_REPLICA_HOST,
+                port: parseInt(process.env.DATABASE_READ_REPLICA_PORT || '5432', 10),
+                username: process.env.DATABASE_READ_REPLICA_USERNAME,
+                password: process.env.DATABASE_READ_REPLICA_PASSWORD,
+                database: process.env.DATABASE_READ_REPLICA_NAME,
+                weight: process.env.DATABASE_READ_REPLICA_WEIGHT
+                  ? parseInt(process.env.DATABASE_READ_REPLICA_WEIGHT, 10)
+                  : 1,
+              },
+            ];
+          }
+          return undefined;
+        }
+
+        try {
+          return JSON.parse(replicasEnv);
+        } catch {
+          return undefined;
+        }
+      })(),
     },
 
     auth: {
