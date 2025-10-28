@@ -224,7 +224,19 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
 }
 
 function getAllowedDomains(configService: ConfigurationService, env: string): (string | RegExp)[] {
-  return configService.cors.domains || [];
+  const corsConfig = configService.cors as any; // Type assertion for project-specific extensions
+
+  // First check for project-specific domains
+  if (corsConfig.domains && corsConfig.domains.length > 0) {
+    return corsConfig.domains;
+  }
+
+  // Fall back to environment-specific domains
+  if (env === 'production') {
+    return corsConfig.production || [];
+  } else {
+    return corsConfig.testing || [];
+  }
 }
 
 export default fp(fastifyCorsPlugin, {

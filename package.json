@@ -37,7 +37,10 @@
     "db:seed": "npx mikro-orm seeder:run",
     "setup:new-project": "node scripts/setup-new-project.js",
     "update:boilerplate": "node scripts/update-boilerplate.js",
+    "update:boilerplate:v2": "node scripts/update-boilerplate-v2.js",
+    "migrate:layered": "node scripts/migrate-to-layered-architecture.js",
     "check:boilerplate": "node scripts/check-boilerplate-version.js",
+    "check:architecture": "node scripts/check-architecture-status.js",
     "yarn:upgrade": "yarn upgrade-interactive",
     "yarn:why": "yarn why @nestjs/core",
     "prepare": "husky"

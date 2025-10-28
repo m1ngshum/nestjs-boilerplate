@@ -14,13 +14,12 @@ function question(query) {
   return new Promise((resolve) => rl.question(query, resolve));
 }
 
-// Paths that can be safely updated automatically (layered architecture)
-const SAFE_UPDATE_PATHS = [
+// Enhanced path categorization for layered configuration approach
+const TEMPLATE_MANAGED_PATHS = [
+  // Core template files that should always sync
   'src/main.ts',
-  
-  // Layered Common Architecture
-  'src/common/base/',                     // Template-managed base components
-  'src/common/filters/',                  // Legacy filters (backward compatibility)
+  'src/common/base/',                     // Template-managed base common utilities
+  'src/common/filters/',                  // Legacy filters (for backward compatibility)
   'src/common/interceptors/',             // Legacy interceptors
   'src/common/pipes/',                    // Legacy pipes
   'src/common/guards/',                   // Common guards
@@ -30,31 +29,17 @@ const SAFE_UPDATE_PATHS = [
   'src/common/types/',                    // Common types
   'src/common/constants/',                // Common constants
   'src/common/services/',                 // Common services
-  'src/common/async-context-key.ts',      // Common async context
-  'src/common/index.ts',                  // Common exports
-  
-  // Layered Configuration Architecture
-  'src/config/base-configuration.ts',     // Template-managed base configuration
-  'src/config/config.utils.ts',           // Configuration utilities
-  'src/config/index.ts',                  // Configuration exports
-  
-  // Database Base Components
-  'src/database/base/',                   // Template-managed database base components
+  'src/config/base-configuration.ts',     // Template-managed base config
+  'src/config/config.utils.ts',
+  'src/database/base/',                   // Template-managed base database utilities
   'src/database/utils/',                  // Database utilities
   'src/database/entities/base.entity.ts', // Base entity
-  'src/database/entities/index.ts',       // Entity exports
   'src/database/dto/pagination.dto.ts',   // Standard DTOs
   'src/database/mikro-orm.config.ts',     // ORM configuration
-  'src/database/database-health.indicator.ts', // Health indicator
-  'src/database/index.ts',                // Database exports
-  
-  // Core Template Modules
-  'src/logger/',                          // Logger module
-  'src/cache/',                           // Cache module
-  'src/health/',                          // Health check module
-  'src/sentry/',                          // Sentry integration
-  
-  // Build and Configuration Files
+  'src/logger/',
+  'src/cache/',
+  'src/health/',
+  'src/sentry/',
   'eslint.config.mjs',
   'tsconfig.json',
   'tsconfig.build.json',
@@ -64,74 +49,40 @@ const SAFE_UPDATE_PATHS = [
   '.gitignore',
   '.prettierrc',
   '.github/workflows/',
-  
-  // Update Scripts
   'scripts/update-boilerplate.js',
   'scripts/update-boilerplate-v2.js',
-  'scripts/check-boilerplate-version.js',
-  'scripts/create-migration.ts',
 ];
 
-// Paths that require review before updating (may have both template and project logic)
-const REVIEW_REQUIRED_PATHS = [
-  'src/config/configuration.module.ts',   // Module setup may have project-specific providers
-  'src/config/configuration.validation.ts', // Validation may have project-specific rules
-  'src/common/common.module.ts',          // May have project-specific provider configuration
-  'src/database/database.module.ts',      // May have project-specific database configuration
-  'src/database/database.service.ts',     // May have project-specific database methods
-  'src/database/pagination.service.ts',   // May have project-specific pagination logic
-  'package.json',                         // Dependencies may need coordination
-  'docker-compose.yml',                   // Infrastructure may need project-specific services
-  '.env.example',                         // Environment variables may need project updates
+// Files that require review but can be updated
+const REVIEWABLE_PATHS = [
+  'src/config/configuration.module.ts',   // May need updates for new config sections
+  'src/config/configuration.validation.ts', // May need updates for new validation rules
+  'package.json',                         // Dependencies may need updates
+  'docker-compose.yml',                   // Infrastructure updates
 ];
 
-// Paths that should never be automatically updated (project-specific)
+// Project-specific files that should never be automatically updated
 const PROTECTED_PATHS = [
-  // Core Project Files
-  'src/app.module.ts',                    // Project-specific module setup
-  'README.md',                            // Project-specific documentation
-  '.env',                                 // Project environment
-  '.env.local',                           // Local environment overrides
-  '.github/CODEOWNERS',                   // Project-specific ownership
-  
-  // Layered Architecture - Project Layer
+  'src/app.module.ts',                    // Project-specific modules
   'src/config/project-configuration.ts',  // Project-specific config extensions
-  'src/config/configuration.ts',          // Main configuration (project-managed)
   'src/config/configuration.service.ts',  // May have project-specific methods
-  'src/config/config.types.ts',           // Project-specific config types
   'src/common/project/',                  // Project-specific common utilities
+  'src/common/common.module.ts',          // May have project-specific providers
   'src/database/project/',                // Project-specific database utilities
-  
-  // Project-Specific Business Logic
-  'src/*/entities/',                      // Business entities
-  'src/*/dto/',                          // Business DTOs
-  'src/*/controllers/',                   // API controllers
-  'src/*/services/',                     // Business services
-  'src/*/modules/',                      // Feature modules
-  'migrations/',                         // Database migrations
-  
-  // Project Features
+  'src/database/database.module.ts',      // May have project-specific config
+  'src/database/database.service.ts',     // May have project-specific methods
+  'src/database/pagination.service.ts',   // May have project-specific logic
+  'README.md',                            // Project-specific documentation
+  '.env',
+  '.env.example',
+  '.github/CODEOWNERS',
+  'src/*/entities/',                      // Project-specific entities
+  'src/*/dto/',                          // Project-specific DTOs
+  'migrations/',                         // Project-specific migrations
   'src/verification-program/',           // Project-specific features
-  'src/auth/',                           // Authentication (if customized)
-  'src/api/',                            // API routes
-  'src/features/',                       // Business features
-  
-  // Infrastructure
-  '.aws/',                               // AWS deployment config
-  'docker-compose.yml',                  // Local development setup
-  'kubernetes/',                         // K8s manifests
-  'terraform/',                          // Infrastructure as code
-  
-  // Package Management
-  'pnpm-lock.yaml',                      // Exact dependency versions
-  'yarn.lock',                           // Exact dependency versions
-  'package-lock.json',                   // Exact dependency versions
-  
-  // Testing
-  'test/fixtures/',                      // Project-specific test data
-  'test/e2e/',                          // End-to-end tests (project-specific)
-  'src/**/*.spec.ts',                   // Unit tests
-  'src/**/*.e2e-spec.ts',               // Integration tests
+  'pnpm-lock.yaml',
+  'yarn.lock',
+  'package-lock.json',
 ];
 
 const BOILERPLATE_REMOTE = 'boilerplate';
@@ -151,7 +102,6 @@ async function fetchBoilerplateUpdates() {
   console.log('🔄 Fetching latest boilerplate updates...');
   execSync(`git fetch ${BOILERPLATE_REMOTE}`, { stdio: 'inherit' });
   
-  // Get the latest commit info
   const latestCommit = execSync(`git log ${BOILERPLATE_REMOTE}/main --oneline -1`, { encoding: 'utf8' });
   console.log(`📦 Latest boilerplate version: ${latestCommit.trim()}`);
 }
@@ -168,13 +118,14 @@ async function getChangedFiles() {
 
 function categorizeFiles(files) {
   const categories = {
-    safe: [],
-    review: [],
+    templateManaged: [],
+    reviewable: [],
     protected: [],
     new: [],
   };
 
   files.forEach(file => {
+    // Check if protected first (highest priority)
     const isProtected = PROTECTED_PATHS.some(pattern => 
       file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
     );
@@ -184,21 +135,23 @@ function categorizeFiles(files) {
       return;
     }
 
-    const isSafe = SAFE_UPDATE_PATHS.some(pattern => 
+    // Check if template-managed
+    const isTemplateManaged = TEMPLATE_MANAGED_PATHS.some(pattern => 
       file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
     );
     
-    if (isSafe) {
-      categories.safe.push(file);
+    if (isTemplateManaged) {
+      categories.templateManaged.push(file);
       return;
     }
 
-    const needsReview = REVIEW_REQUIRED_PATHS.some(pattern => 
+    // Check if reviewable
+    const isReviewable = REVIEWABLE_PATHS.some(pattern => 
       file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
     );
     
-    if (needsReview) {
-      categories.review.push(file);
+    if (isReviewable) {
+      categories.reviewable.push(file);
       return;
     }
 
@@ -206,21 +159,29 @@ function categorizeFiles(files) {
     if (!fs.existsSync(file)) {
       categories.new.push(file);
     } else {
-      categories.review.push(file);
+      // Default to reviewable for unknown files
+      categories.reviewable.push(file);
     }
   });
 
   return categories;
 }
 
-async function updateSafeFiles(files) {
+async function updateTemplateManagedFiles(files) {
   if (files.length === 0) {
-    console.log('📝 No safe files to update');
+    console.log('📝 No template-managed files to update');
     return;
   }
 
-  console.log(`\n🟢 Updating ${files.length} safe files automatically:`);
+  console.log(`\n🟢 Updating ${files.length} template-managed files automatically:`);
   files.forEach(file => console.log(`   - ${file}`));
+
+  const updateConfirm = await question('\nProceed with automatic updates? (y/n): ');
+  
+  if (updateConfirm.toLowerCase() !== 'y') {
+    console.log('❌ Skipping template-managed file updates');
+    return;
+  }
 
   for (const file of files) {
     try {
@@ -240,6 +201,7 @@ async function reviewFiles(files) {
 
   console.log(`\n🟡 Files requiring review (${files.length}):`);
   files.forEach(file => console.log(`   - ${file}`));
+  console.log('\n💡 These files may have breaking changes or project-specific modifications.');
 
   const updateReview = await question('\nUpdate these files? (y/n/selective): ');
   
@@ -254,6 +216,22 @@ async function reviewFiles(files) {
     }
   } else if (updateReview.toLowerCase() === 'selective') {
     for (const file of files) {
+      console.log(`\n📄 Reviewing: ${file}`);
+      
+      // Show diff for the file
+      try {
+        const diff = execSync(`git diff HEAD ${BOILERPLATE_REMOTE}/main -- "${file}"`, { encoding: 'utf8' });
+        if (diff.trim()) {
+          console.log('📊 Changes preview:');
+          console.log(diff.split('\n').slice(0, 20).join('\n'));
+          if (diff.split('\n').length > 20) {
+            console.log('... (truncated, use `git diff` for full changes)');
+          }
+        }
+      } catch (error) {
+        console.log('⚠️  Could not show diff');
+      }
+
       const updateFile = await question(`Update ${file}? (y/n): `);
       if (updateFile.toLowerCase() === 'y') {
         try {
@@ -310,6 +288,98 @@ function showProtectedFiles(files) {
   console.log(`\n🔴 Protected files (not updated automatically):`);
   files.forEach(file => console.log(`   - ${file}`));
   console.log('\n💡 These files contain project-specific changes and should be updated manually if needed.');
+  console.log('📖 For configuration changes, check if new features need to be added to project-configuration.ts');
+}
+
+async function validateLayeredArchitecture() {
+  console.log('\n🔍 Validating layered architecture...');
+  
+  // Validate configuration structure
+  const configFiles = [
+    'src/config/base-configuration.ts',
+    'src/config/project-configuration.ts',
+    'src/config/configuration.ts',
+  ];
+
+  // Validate common utilities structure
+  const commonFiles = [
+    'src/common/base/base-exception.filter.ts',
+    'src/common/base/base-transform.interceptor.ts',
+    'src/common/base/base-validation.pipe.ts',
+  ];
+
+  // Check for recommended project structure
+  const recommendedProjectFiles = [
+    'src/common/project/project-exception.filter.ts',
+    'src/common/project/project-transform.interceptor.ts',
+  ];
+
+  // Validate structure
+  const missingConfigFiles = configFiles.filter(file => !fs.existsSync(file));
+  const missingCommonFiles = commonFiles.filter(file => !fs.existsSync(file));
+  const missingProjectFiles = recommendedProjectFiles.filter(file => !fs.existsSync(file));
+
+  let hasIssues = false;
+
+  if (missingConfigFiles.length > 0) {
+    console.log('❌ Missing layered configuration files:');
+    missingConfigFiles.forEach(file => console.log(`   - ${file}`));
+    hasIssues = true;
+  }
+
+  if (missingCommonFiles.length > 0) {
+    console.log('❌ Missing base common utilities:');
+    missingCommonFiles.forEach(file => console.log(`   - ${file}`));
+    hasIssues = true;
+  }
+
+  if (missingProjectFiles.length > 0) {
+    console.log('💡 Recommended project extensions not found:');
+    missingProjectFiles.forEach(file => console.log(`   - ${file}`));
+    console.log('   These are optional but provide enhanced functionality.');
+  }
+
+  if (hasIssues) {
+    console.log('\n⚠️  Layered architecture is incomplete.');
+    console.log('📖 Run the migration guide to update to the new structure.');
+    console.log('📚 See src/config/README.md and src/common/README.md for details.');
+  } else {
+    console.log('✅ Layered architecture is properly configured');
+    
+    // Check for common migration opportunities
+    await checkMigrationOpportunities();
+  }
+}
+
+async function checkMigrationOpportunities() {
+  console.log('\n🔍 Checking for migration opportunities...');
+  
+  const legacyPatterns = [
+    { 
+      pattern: 'GlobalExceptionFilter', 
+      file: 'src/common/filters/global-exception.filter.ts',
+      suggestion: 'Consider migrating to ProjectExceptionFilter for enhanced features'
+    },
+    { 
+      pattern: 'TransformInterceptor', 
+      file: 'src/common/interceptors/transform.interceptor.ts',
+      suggestion: 'Consider migrating to ProjectTransformInterceptor for enhanced metadata'
+    },
+  ];
+
+  for (const legacy of legacyPatterns) {
+    try {
+      // Search for usage of legacy components
+      const grepResult = execSync(`grep -r "${legacy.pattern}" src/ --include="*.ts" || true`, { encoding: 'utf8' });
+      
+      if (grepResult.trim()) {
+        console.log(`💡 Found usage of ${legacy.pattern}:`);
+        console.log(`   ${legacy.suggestion}`);
+      }
+    } catch (error) {
+      // Ignore grep errors
+    }
+  }
 }
 
 async function checkForConflicts() {
@@ -334,8 +404,11 @@ async function showUpdateSummary() {
     if (changedFiles.length > 0) {
       console.log(`\n📊 Update Summary:`);
       console.log(`   ${changedFiles.length} files changed`);
-      console.log('\n📝 Review changes with: git diff');
-      console.log('💾 Commit changes with: git add . && git commit -m "Update from boilerplate"');
+      console.log('\n📝 Next steps:');
+      console.log('   1. Review changes with: git diff');
+      console.log('   2. Test your application: npm run build && npm run test');
+      console.log('   3. Update project-configuration.ts if new features are available');
+      console.log('   4. Commit changes with: git add . && git commit -m "Update from boilerplate"');
     } else {
       console.log('\n✨ No changes applied - your project is up to date!');
     }
@@ -345,47 +418,45 @@ async function showUpdateSummary() {
 }
 
 async function main() {
-  console.log('🚀 NestJS Boilerplate Update Tool\n');
+  console.log('🚀 NestJS Boilerplate Update Tool v2.0 (Layered Configuration)\n');
 
   try {
-    // Check if git working directory is clean
     if (!(await checkForConflicts())) {
       process.exit(1);
     }
 
-    // Setup boilerplate remote
     await checkBoilerplateRemote();
-
-    // Fetch latest updates
     await fetchBoilerplateUpdates();
 
-    // Get changed files
     const changedFiles = await getChangedFiles();
     
     if (changedFiles.length === 0) {
       console.log('✨ Your project is up to date with the latest boilerplate!');
+      await validateLayeredArchitecture();
       return;
     }
 
-    // Categorize files
     const categories = categorizeFiles(changedFiles);
 
     console.log(`\n📋 Update Analysis:`);
-    console.log(`   🟢 Safe updates: ${categories.safe.length}`);
-    console.log(`   🟡 Review required: ${categories.review.length}`);
+    console.log(`   🟢 Template-managed: ${categories.templateManaged.length} (safe to auto-update)`);
+    console.log(`   🟡 Reviewable: ${categories.reviewable.length} (requires review)`);
     console.log(`   🆕 New files: ${categories.new.length}`);
-    console.log(`   🔴 Protected files: ${categories.protected.length}`);
+    console.log(`   🔴 Protected: ${categories.protected.length} (project-specific)`);
 
-    // Process updates
-    await updateSafeFiles(categories.safe);
-    await reviewFiles(categories.review);
+    // Process updates in order of safety
+    await updateTemplateManagedFiles(categories.templateManaged);
+    await reviewFiles(categories.reviewable);
     await handleNewFiles(categories.new);
     showProtectedFiles(categories.protected);
 
-    // Show summary
+    await validateLayeredArchitecture();
     await showUpdateSummary();
 
     console.log('\n🎉 Boilerplate update complete!');
+    console.log('\n📚 Documentation:');
+    console.log('   - Layered Configuration: See src/config/README.md');
+    console.log('   - Update Strategy: See UPDATE-STRATEGY.md');
 
   } catch (error) {
     console.error('❌ Update failed:', error.message);
@@ -400,3 +471,4 @@ if (require.main === module) {
 }
 
 module.exports = { main };
+
