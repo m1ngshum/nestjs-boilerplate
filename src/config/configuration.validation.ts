@@ -178,32 +178,6 @@ class AppConfigDto {
   NODE_ENV?: 'development' | 'production' | 'test';
 }
 
-class AuthConfigDto {
-  @IsString()
-  @IsNotEmpty()
-  JWT_SECRET: string = '';
-
-  @IsString()
-  @IsOptional()
-  JWT_EXPIRES_IN?: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_REFRESH_SECRET?: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_REFRESH_EXPIRES_IN?: string;
-
-  @IsString()
-  @IsOptional()
-  GOOGLE_CLIENT_ID?: string;
-
-  @IsString()
-  @IsOptional()
-  GOOGLE_CLIENT_SECRET?: string;
-}
-
 class CacheConfigDto {
   @IsString()
   @IsOptional()
@@ -356,7 +330,6 @@ class EnvironmentVariables
   extends AppConfigDto
   implements
     DatabaseConfigDto,
-    AuthConfigDto,
     CacheConfigDto,
     SentryConfigDto,
     CorsConfigDto,
@@ -376,14 +349,6 @@ class EnvironmentVariables
   DATABASE_SYNCHRONIZE?: boolean;
   DATABASE_LOGGING?: boolean;
   DATABASE_SSL?: boolean;
-
-  // Auth
-  JWT_SECRET: string = '';
-  JWT_EXPIRES_IN?: string;
-  JWT_REFRESH_SECRET?: string;
-  JWT_REFRESH_EXPIRES_IN?: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
 
   // Cache
   VALKEY_CLUSTER_HOST?: string;
@@ -435,7 +400,6 @@ function getFieldSuggestion(fieldName: string, value: any): string {
     DATABASE_USERNAME: 'Set DATABASE_USERNAME to your database username',
     DATABASE_PASSWORD: 'Set DATABASE_PASSWORD to your database password',
     DATABASE_NAME: 'Set DATABASE_NAME to your database name',
-    JWT_SECRET: 'Set JWT_SECRET to a secure random string (at least 32 characters)',
     REDIS_PORT:
       'Set REDIS_PORT to a valid port number (e.g., 6379) or leave empty to disable Redis',
     VALKEY_CLUSTER_PORT:

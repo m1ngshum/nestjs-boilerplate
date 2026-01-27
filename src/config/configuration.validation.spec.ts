@@ -5,24 +5,15 @@ describe('Configuration Validation', () => {
     NODE_ENV: 'development',
     APP_NAME: 'test-app',
     APP_PORT: '3000',
-    DATABASE_URL: 'postgresql://user:pass@localhost:5432/testdb',
     DATABASE_HOST: 'localhost',
     DATABASE_PORT: '5432',
     DATABASE_USERNAME: 'user',
     DATABASE_PASSWORD: 'pass',
     DATABASE_NAME: 'testdb',
-    JWT_SECRET: 'test-secret',
   };
 
   it('should validate correct configuration', () => {
     expect(() => validateConfiguration(validConfig)).not.toThrow();
-  });
-
-  it('should throw error for missing JWT_SECRET', () => {
-    const invalidConfig = { ...validConfig };
-    (invalidConfig as any).JWT_SECRET = undefined;
-
-    expect(() => validateConfiguration(invalidConfig)).toThrow(/JWT_SECRET/);
   });
 
   it('should throw error for missing DATABASE_PASSWORD', () => {

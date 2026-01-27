@@ -23,16 +23,6 @@ export interface DatabaseConfig {
   readReplicas?: ReadReplicaConfig[];
 }
 
-export interface AuthConfig {
-  jwtSecret: string;
-  jwtExpiresIn: string;
-  jwtRefreshSecret: string;
-  jwtRefreshExpiresIn: string;
-  enableGoogleAuth: boolean;
-  googleClientId?: string;
-  googleClientSecret?: string;
-}
-
 export interface CacheConfig {
   type: 'redis' | 'memory';
   host?: string;
@@ -153,7 +143,6 @@ export interface SecurityConfig {
 export interface AppConfiguration {
   app: AppConfig;
   database: DatabaseConfig;
-  auth: AuthConfig;
   cache: CacheConfig;
   valkey: ValkeyConfig;
   sentry: SentryConfig;
@@ -217,17 +206,6 @@ export default registerAs('config', (): AppConfiguration => {
           return undefined;
         }
       })(),
-    },
-
-    auth: {
-      jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
-      jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-      jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key',
-      jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
-      enableGoogleAuth:
-        process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? true : false,
-      googleClientId: process.env.GOOGLE_CLIENT_ID,
-      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
 
     cache: {
