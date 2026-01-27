@@ -19,6 +19,7 @@ import { CommonModule } from './common/common.module';
 import { CacheModule } from './cache/cache.module';
 import { HealthModule } from './health/health.module';
 import { SentryModule } from './sentry/sentry.module';
+import { TracingModule } from './common/tracing/tracing.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { SentryModule } from './sentry/sentry.module';
     CacheModule,
     HealthModule,
     SentryModule,
+    TracingModule,
   ],
   controllers: [AppController],
   providers: [
