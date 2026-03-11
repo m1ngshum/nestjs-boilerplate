@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigurationService } from '../config/configuration.service';
-import { LoadStrategy, Utils } from '@mikro-orm/core';
+import { LoadStrategy, Utils } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { DatabaseService } from './database.service';
 import { PaginationService } from './pagination.service';
 import { DatabaseHealthIndicator } from './database-health.indicator';
+import { ReadReplicaService } from './read-replica.service';
 import { LoggerService } from '../logger/logger.service';
 
 @Module({
@@ -19,7 +20,7 @@ import { LoggerService } from '../logger/logger.service';
       useFactory: async (configService: ConfigurationService, loggerService: LoggerService) => {
         const dbConfig = configService.database;
 
-        return {
+        const config: any = {
           loadStrategy: LoadStrategy.JOINED,
           discovery: { warnWhenNoEntities: false },
           entities: ['dist/**/*.entity.js'],
@@ -36,32 +37,40 @@ import { LoggerService } from '../logger/logger.service';
             path: Utils.detectTsNode() ? 'src/migrations' : 'dist/migrations',
             safe: true,
           },
-          // Add read replica support if configured
-          ...(process.env.DATABASE_READ_REPLICA_HOST && {
-            replicas: [
-              {
-                name: 'read-replica',
-                host: process.env.DATABASE_READ_REPLICA_HOST,
-                port: parseInt(
-                  process.env.DATABASE_READ_REPLICA_PORT || dbConfig.port.toString(),
-                  10,
-                ),
-                user: process.env.DATABASE_READ_REPLICA_USERNAME || dbConfig.username,
-                password: process.env.DATABASE_READ_REPLICA_PASSWORD || dbConfig.password,
-                dbName: process.env.DATABASE_READ_REPLICA_NAME || dbConfig.database,
-              },
-            ],
-          }),
           extensions: [Migrator],
           registerRequestContext: false,
+          // Automatically route read operations to replicas (default: true)
+          preferReadReplicas: true,
         };
+
+        // Add read replica support if configured
+        // MikroORM will automatically use these for SELECT/COUNT queries outside transactions
+        if (dbConfig.readReplicas && dbConfig.readReplicas.length > 0) {
+          config.replicas = dbConfig.readReplicas.map((replica, index) => ({
+            name: replica.host,
+            host: replica.host,
+            port: replica.port,
+            user: replica.username || dbConfig.username,
+            password: replica.password || dbConfig.password,
+            dbName: replica.database || dbConfig.database,
+            ...(replica.weight && { weight: replica.weight }),
+          }));
+        }
+
+        return config;
       },
     }),
 
     // Register entities for repository injection
     MikroOrmModule.forFeature([]),
   ],
-  providers: [DatabaseService, PaginationService, DatabaseHealthIndicator],
-  exports: [DatabaseService, PaginationService, DatabaseHealthIndicator, MikroOrmModule],
+  providers: [DatabaseService, PaginationService, DatabaseHealthIndicator, ReadReplicaService],
+  exports: [
+    DatabaseService,
+    PaginationService,
+    DatabaseHealthIndicator,
+    ReadReplicaService,
+    MikroOrmModule,
+  ],
 })
 export class DatabaseModule {}

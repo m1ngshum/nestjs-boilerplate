@@ -1,70 +1,101 @@
-# Multi-stage Dockerfile for NestJS Boilerplate
-# Stage 1: Dependencies
-FROM node:24-alpine AS deps
+# ===============================================
+# Multi-stage Dockerfile for Production Deployment
+# Optimized for security, performance, and size
+# ===============================================
 
-# Install dependencies for native modules
+# Stage 1: Base image with security updates
+FROM node:24-alpine AS base
+
+# Install security updates and required packages
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    dumb-init \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Create app directory with proper permissions
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 -G nodejs
+
+# ===============================================
+# Stage 2: Dependencies
+# ===============================================
+FROM base AS deps
+
+# Install build dependencies
 RUN apk add --no-cache python3 make g++
 
-# Set working directory
-WORKDIR /app
+# Copy package files for better layer caching
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Install dependencies with optimizations
+RUN pnpm config set store-dir /app/.pnpm-store && \
+    pnpm install --frozen-lockfile --prod=false && \
+    pnpm store prune
+
+# ===============================================
+# Stage 3: Builder
+# ===============================================
+FROM base AS builder
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile --prod=false
-
-# Stage 2: Build
-FROM node:24-alpine AS builder
-
-# Install dependencies for native modules
-RUN apk add --no-cache python3 make g++
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm globally
-RUN npm install -g pnpm
+# Install pnpm
+RUN npm install -g pnpm@latest
 
 # Install all dependencies (including dev dependencies for building)
-RUN pnpm install --frozen-lockfile
+RUN pnpm config set store-dir /app/.pnpm-store && \
+    pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm build
+# Build the application with optimizations
+RUN pnpm build && \
+    # Remove source maps in production for security
+    find dist -name "*.map" -delete && \
+    # Remove test files
+    find dist -name "*.spec.js" -delete && \
+    find dist -name "*.test.js" -delete
 
-# Stage 3: Production
-FROM node:24-alpine AS production
+# ===============================================
+# Stage 4: Production
+# ===============================================
+FROM base AS production
 
-# Create app user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
-
-# Set working directory
-WORKDIR /app
+# Set production environment
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Install pnpm
+RUN npm install -g pnpm@latest
 
 # Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm config set store-dir /app/.pnpm-store && \
+    pnpm install --frozen-lockfile --prod && \
+    pnpm store prune && \
+    # Clean up pnpm cache
+    rm -rf /app/.pnpm-store
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-# Copy any additional files needed at runtime
-COPY --chown=nestjs:nodejs .env* ./
+# Create directories for logs and temp files
+RUN mkdir -p /app/logs /app/tmp && \
+    chown -R nestjs:nodejs /app/logs /app/tmp
 
 # Switch to non-root user
 USER nestjs
@@ -72,9 +103,12 @@ USER nestjs
 # Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/healthz', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+# Health check with proper error handling
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]

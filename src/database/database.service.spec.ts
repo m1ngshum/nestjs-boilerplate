@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MikroORM } from '@mikro-orm/core';
+import { MikroORM } from '@mikro-orm/postgresql';
 import { DatabaseService } from './database.service';
 import { ConfigurationService } from '../config/configuration.service';
 

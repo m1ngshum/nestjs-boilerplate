@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property, BeforeCreate, BeforeUpdate } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, BeforeCreate, BeforeUpdate } from '@mikro-orm/postgresql';
 import { v4 as uuidv4 } from 'uuid';
 
 @Entity({ abstract: true })

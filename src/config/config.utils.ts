@@ -20,7 +20,9 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
   }
 
   if (process.env.DATABASE_PASSWORD === 'password') {
-    warnings.push('DATABASE_PASSWORD is using the default value. Please change it for production.');
+    warnings.push(
+      'DATABASE_PASSWORD is `using the default value. Please change it for production.',
+    );
   }
 
   if (process.env.NODE_ENV === 'production') {
@@ -34,6 +36,20 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
 
     if (process.env.SWAGGER_ENABLED !== 'false') {
       warnings.push('SWAGGER_ENABLED should be false in production for security.');
+    }
+
+    if (!process.env.AIR_USER_JWT_JWKS_URI) {
+      errors.push('AIR_USER_JWT_JWKS_URI is not set. Consider adding a valid JWT JWKS URI.');
+    }
+
+    if (!process.env.AIR_USER_JWT_EXPECTED_AUDIENCE) {
+      warnings.push(
+        'AIR_USER_JWT_EXPECTED_AUDIENCE is not set. Consider adding a valid JWT expected audience.',
+      );
+    }
+
+    if (!process.env.AIR_USER_JWT_ISSUER) {
+      warnings.push('AIR_USER_JWT_ISSUER is not set. Consider adding a valid JWT issuer.');
     }
   }
 
@@ -117,25 +133,6 @@ export function isTest(): boolean {
 }
 
 /**
- * Get database URL with fallback construction
- */
-export function getDatabaseUrl(): string {
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
-  }
-
-  // Construct from individual components
-  const type = process.env.DATABASE_TYPE || 'postgres';
-  const host = process.env.DATABASE_HOST || 'localhost';
-  const port = process.env.DATABASE_PORT || '5432';
-  const username = process.env.DATABASE_USERNAME || 'postgres';
-  const password = process.env.DATABASE_PASSWORD || 'password';
-  const database = process.env.DATABASE_NAME || 'nestjs_boilerplate';
-
-  return `${type}://${username}:${password}@${host}:${port}/${database}`;
-}
-
-/**
  * Mask sensitive configuration values for logging
  */
 export function maskSensitiveConfig(config: Record<string, any>): Record<string, any> {
@@ -201,4 +198,65 @@ export function isValidUrl(url: string): boolean {
  */
 export function isValidPort(port: number): boolean {
   return Number.isInteger(port) && port >= 1 && port <= 65535;
+}
+
+/**
+ * Normalize private key for ECS deployment
+ * Handles common header/footer issues when storing private keys in environment variables
+ * or AWS Secrets Manager where newlines and special characters can cause problems
+ */
+export function normalizePrivateKey(key: string): string {
+  if (!key) {
+    throw new Error('Private key is required');
+  }
+
+  // If it already has proper PEM headers, return as-is
+  if (key.includes('-----BEGIN') && key.includes('-----END')) {
+    return key;
+  }
+
+  // Check if it's base64 encoded by trying to decode and checking if result is valid
+  let decodedKey: string;
+  try {
+    const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(key) && key.length % 4 === 0 && key.length > 0;
+    if (isBase64) {
+      const decoded = Buffer.from(key, 'base64').toString('utf-8');
+      if (
+        decoded.includes('PRIVATE KEY') ||
+        decoded.includes('EC PRIVATE KEY') ||
+        decoded.includes('RSA PRIVATE KEY')
+      ) {
+        decodedKey = decoded;
+      } else {
+        decodedKey = key;
+      }
+    } else {
+      decodedKey = key;
+    }
+  } catch {
+    decodedKey = key;
+  }
+
+  // Check if decoded content already has headers
+  if (decodedKey.includes('-----BEGIN') && decodedKey.includes('-----END')) {
+    return decodedKey;
+  }
+
+  // Wrap raw key content with proper PEM headers
+  // For ECDSA keys (ES256, ES384, ES512), prefer PKCS8 format
+  // For RSA keys, use RSA PRIVATE KEY format
+  let keyType: string;
+
+  // Check if it's already in PKCS8 format (most common for ECDSA)
+  if (decodedKey.includes('PRIVATE KEY')) {
+    keyType = 'PRIVATE KEY'; // PKCS8 format (works for both ECDSA and RSA)
+  } else if (decodedKey.includes('EC PRIVATE KEY') || decodedKey.includes('ECDSA')) {
+    keyType = 'EC PRIVATE KEY'; // Traditional ECDSA format
+  } else {
+    // For raw key content without headers, default to PKCS8 format
+    // This is safer for ECDSA keys and works with most JWT libraries
+    keyType = 'PRIVATE KEY';
+  }
+
+  return `-----BEGIN ${keyType}-----\n${decodedKey}\n-----END ${keyType}-----`;
 }

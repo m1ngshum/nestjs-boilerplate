@@ -1,5 +1,6 @@
 // Initialize Sentry before any other imports
 import './sentry/sentry.config';
+import * as Sentry from '@sentry/nestjs';
 
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -12,36 +13,108 @@ import { ConfigurationService } from './config/configuration.service';
 import { LoggerService } from './logger/logger.service';
 import { LoggingInterceptor } from './logger/interceptors/logging.interceptor';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { ClsService } from 'nestjs-cls';
+import { validateRequiredEnvVars } from './config/config.utils';
 
 async function bootstrap() {
   console.log('🚀 Starting application bootstrap...');
 
+  // Log environment variables for debugging
+  console.log('🔍 Environment check:');
+  console.log('  NODE_ENV:', process.env.NODE_ENV);
+  console.log('  DATABASE_HOST:', process.env.DATABASE_HOST);
+  console.log('  DATABASE_PORT:', process.env.DATABASE_PORT);
+  console.log('  DATABASE_NAME:', process.env.DATABASE_NAME);
+  console.log('  DATABASE_USERNAME:', process.env.DATABASE_USERNAME);
+  console.log('  DATABASE_PASSWORD:', process.env.DATABASE_PASSWORD ? '[SET]' : '[NOT SET]');
+  console.log('  VALKEY_CLUSTER_HOST:', process.env.VALKEY_CLUSTER_HOST);
+  console.log('  SENTRY_DSN:', process.env.SENTRY_DSN ? '[SET]' : '[NOT SET]');
+
+  // Validate required environment variables
+  console.log('🔍 Validating required environment variables...');
+  const validationResult = validateRequiredEnvVars();
+  if (!validationResult.isValid) {
+    console.error('❌ Configuration validation failed:');
+    validationResult.errors.forEach((error) => console.error(`  - ${error}`));
+    if (validationResult.warnings.length > 0) {
+      console.warn('⚠️ Configuration warnings:');
+      validationResult.warnings.forEach((warning) => console.warn(`  - ${warning}`));
+    }
+
+    // Capture validation error in Sentry before exiting
+    const validationError = new Error(
+      `Environment validation failed: ${validationResult.errors.join(', ')}`,
+    );
+    validationError.name = 'EnvironmentValidationError';
+
+    // Add context to the error
+    Sentry.withScope((scope) => {
+      scope.setTag('error_type', 'environment_validation');
+      scope.setLevel('error');
+      scope.setContext('validation_errors', {
+        errors: validationResult.errors,
+        warnings: validationResult.warnings,
+        environment: process.env.NODE_ENV,
+      });
+      scope.setContext('environment_variables', {
+        NODE_ENV: process.env.NODE_ENV,
+        DATABASE_HOST: process.env.DATABASE_HOST,
+        DATABASE_PORT: process.env.DATABASE_PORT,
+        DATABASE_NAME: process.env.DATABASE_NAME,
+        DATABASE_USERNAME: process.env.DATABASE_USERNAME,
+        DATABASE_PASSWORD: process.env.DATABASE_PASSWORD ? '[SET]' : '[NOT SET]',
+        VALKEY_CLUSTER_HOST: process.env.VALKEY_CLUSTER_HOST,
+        SENTRY_DSN: process.env.SENTRY_DSN ? '[SET]' : '[NOT SET]',
+      });
+
+      Sentry.captureException(validationError);
+    });
+
+    // Give Sentry time to send the error before exiting
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    process.exit(1);
+  }
+  if (validationResult.warnings.length > 0) {
+    console.warn('⚠️ Configuration warnings:');
+    validationResult.warnings.forEach((warning) => console.warn(`  - ${warning}`));
+  }
+  console.log('✅ Environment variables validation passed');
+
   console.log('📦 Creating NestJS application...');
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter({
-      logger: false,
-      // Fastify-specific optimizations
-      trustProxy: true,
-      ignoreTrailingSlash: true,
-      ignoreDuplicateSlashes: true,
-      // Connection settings
-      connectionTimeout: 30000,
-      keepAliveTimeout: 5000,
-      maxRequestsPerSocket: 0,
-      // Body parsing limits
-      bodyLimit: 10485760, // 10MB
-    }),
-    {
+  console.log('  - Initializing FastifyAdapter...');
+  const fastifyAdapter = new FastifyAdapter({
+    logger: false,
+    // Fastify-specific optimizations
+    trustProxy: true,
+    ignoreTrailingSlash: true,
+    ignoreDuplicateSlashes: true,
+    // Connection settings
+    connectionTimeout: 30000,
+    keepAliveTimeout: 5000,
+    maxRequestsPerSocket: 0,
+    // Body parsing limits
+    bodyLimit: 10485760, // 10MB
+  });
+  console.log('  - FastifyAdapter created');
+
+  console.log('  - Creating NestFactory...');
+  let app: NestFastifyApplication;
+  try {
+    app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, {
       logger: false,
       bufferLogs: true,
       // Enable CORS preflight caching
       cors: true,
-    },
-  );
-  console.log('✅ NestJS application created successfully');
+    });
+    console.log('✅ NestJS application created successfully');
+  } catch (error) {
+    console.log(
+      '❌ Failed to create NestJS application:',
+      error instanceof Error ? error.message : String(error),
+    );
+    console.log('❌ Error details:', error);
+    throw error;
+  }
 
   console.log('🔧 Getting configuration service...');
   const configService = app.get(ConfigurationService);
@@ -157,10 +230,7 @@ async function bootstrap() {
 
   console.log('🔄 Setting up global interceptors...');
   // Global interceptors
-  app.useGlobalInterceptors(
-    new LoggingInterceptor(logger),
-    new TransformInterceptor(app.get(ClsService)),
-  );
+  app.useGlobalInterceptors(new LoggingInterceptor(logger));
   console.log('✅ Global interceptors configured');
 
   console.log('🛡️ Setting up global filters...');
@@ -191,7 +261,7 @@ async function bootstrap() {
       .addTag('Application', 'Application information endpoints')
       .addTag('Health', 'Health check endpoints')
       .addTag('Auth', 'Authentication endpoints')
-      .addServer(`http://localhost:${configService.app.port}`, 'Local development')
+      .addServer(`${configService.app.url}`, `${configService.app.environment} server`)
       .build();
 
     const document = SwaggerModule.createDocument(app, config, {
@@ -211,7 +281,7 @@ async function bootstrap() {
     });
 
     logger.log(
-      `📚 Swagger documentation will be available at: http://localhost:${configService.app.port}/${swaggerConfig.path}`,
+      `📚 Swagger documentation will be available at: ${configService.app.url}/${swaggerConfig.path}`,
     );
   }
 
@@ -276,7 +346,22 @@ async function bootstrap() {
   }
 }
 
-bootstrap().catch((error) => {
-  console.error('Failed to start application:', error);
-  process.exit(1);
-});
+// Add timeout to prevent hanging
+const BOOTSTRAP_TIMEOUT = 60000; // 60 seconds
+
+const bootstrapWithTimeout = async () => {
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Bootstrap timeout after ${BOOTSTRAP_TIMEOUT}ms`));
+    }, BOOTSTRAP_TIMEOUT);
+  });
+
+  try {
+    await Promise.race([bootstrap(), timeoutPromise]);
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+};
+
+bootstrapWithTimeout();

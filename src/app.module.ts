@@ -1,7 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer, OnModuleInit } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ClsModule, ClsMiddleware } from 'nestjs-cls';
-import { MikroORM } from '@mikro-orm/core';
+import { MikroORM } from '@mikro-orm/postgresql';
 import { InjectMikroORM } from '@mikro-orm/nestjs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

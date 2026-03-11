@@ -114,10 +114,6 @@ function updateEnvExample(projectName, databaseName, enabledFeatures) {
   // Update app name and database
   envContent = envContent.replace(/APP_NAME=nestjs-boilerplate/g, `APP_NAME=${projectName}`);
   envContent = envContent.replace(/DATABASE_NAME=nestjs_boilerplate/g, `DATABASE_NAME=${databaseName}`);
-  envContent = envContent.replace(
-    /DATABASE_URL=postgresql:\/\/postgres:password@localhost:5432\/nestjs_boilerplate/g,
-    `DATABASE_URL=postgresql://postgres:password@localhost:5432/${databaseName}`
-  );
 
   // Remove optional features if not enabled
   if (!enabledFeatures.sentry) {
@@ -180,7 +176,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:password@db:5432/${databaseName}
       - REDIS_HOST=redis
     depends_on:
       - db

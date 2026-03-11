@@ -1,4 +1,4 @@
-import { defineConfig, LoadStrategy, Utils } from '@mikro-orm/core';
+import { defineConfig, LoadStrategy, Utils } from '@mikro-orm/postgresql';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';

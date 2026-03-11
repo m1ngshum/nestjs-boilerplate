@@ -16,45 +16,55 @@ function question(query) {
 
 // Paths that can be safely updated automatically
 const SAFE_UPDATE_PATHS = [
-  'src/common/utils/',
-  'src/common/decorators/',
-  'src/common/pipes/',
+  'src/main.ts',
+  'src/common/',
   'src/config/config.utils.ts',
-  'src/logger/logger.service.ts',
-  '.github/workflows/ci.yml',
-  'docker-compose.yml',
+  'src/logger/',
+  'src/cache/',
+  'src/database/utils/',
+  'src/health/',
+  'src/sentry/',
+  'eslint.config.mjs',
+  'tsconfig.json',
+  'tsconfig.build.json',
+  'nest-cli.json',
   'Dockerfile',
   '.dockerignore',
   '.gitignore',
+  '.prettierrc',
+  '.github/workflows/',
+  'scripts/',
 ];
 
 // Paths that require review before updating
 const REVIEW_REQUIRED_PATHS = [
-  'src/config/configuration.ts',
-  'src/common/filters/',
-  'src/common/interceptors/',
-  '.github/workflows/deploy.yml',
-  'nest-cli.json',
-  'tsconfig.json',
-  '.eslintrc.js',
-  '.prettierrc',
 ];
 
-// Paths that should never be automatically updated
+// Paths that should never be automatically updated (project-specific)
 const PROTECTED_PATHS = [
   'src/app.module.ts',
-  'src/main.ts',
   'package.json',
   'README.md',
+  'docker-compose.yml',
+  '.aws/',
   '.env',
   '.env.example',
+  '.github/CODEOWNERS',
+  'src/config/configuration.ts',
+  'src/config/configuration.validation.ts',
+  'src/config/configuration.service.ts',
+  'src/config/config.types.ts',
   'src/*/entities/',
   'src/*/dto/',
   'migrations/',
+  'src/verification-program/',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+  'package-lock.json',
 ];
 
 const BOILERPLATE_REMOTE = 'boilerplate';
-const BOILERPLATE_URL = 'https://github.com/your-org/nestjs-boilerplate.git';
+const BOILERPLATE_URL = 'https://github.com/mocaverse/nestjs-boilerplate.git';
 
 async function checkBoilerplateRemote() {
   try {

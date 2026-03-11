@@ -36,6 +36,11 @@ export class LoggingInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
     const { method, url, headers, body, query, params } = request;
 
+    // Skip logging for health check endpoints
+    if (this.shouldSkipLogging(url)) {
+      return next.handle();
+    }
+
     // Log incoming request
     this.logger.debug('Incoming Request', {
       method,
@@ -125,6 +130,20 @@ export class LoggingInterceptor implements NestInterceptor {
         throw error;
       }),
     );
+  }
+
+  /**
+   * Check if logging should be skipped for the given URL
+   */
+  private shouldSkipLogging(url: string): boolean {
+    const skipPatterns = [
+      '/healthz', // Health check endpoint
+      '/healthz/', // Health check endpoint with trailing slash
+      '/v1/healthz', // Versioned health check endpoint
+      '/v1/healthz/', // Versioned health check endpoint with trailing slash
+    ];
+
+    return skipPatterns.some((pattern) => url.includes(pattern));
   }
 
   /**

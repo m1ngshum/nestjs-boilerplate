@@ -6,7 +6,7 @@ A comprehensive, production-ready NestJS boilerplate with authentication, loggin
 
 - 🚀 **NestJS with Fastify** - Built with NestJS and Fastify for high performance
 - 🔐 **Authentication** - JWT-based authentication with refresh tokens
-- 📊 **Database** - PostgreSQL with MikroORM and migrations
+- 📊 **Database** - PostgreSQL with MikroORM, migrations, and read replica support
 - 🗄️ **Caching** - Redis and in-memory caching support with Fastify integration
 - 📝 **Logging** - Structured logging with Winston
 - 🛡️ **Security** - Fastify Helmet, advanced CORS, rate limiting, and validation
@@ -88,6 +88,9 @@ The API will be available at `http://localhost:3000` and Swagger documentation a
 | `DATABASE_USERNAME` | PostgreSQL username | `postgres` | Yes |
 | `DATABASE_PASSWORD` | PostgreSQL password | - | Yes |
 | `DATABASE_NAME` | PostgreSQL database name | - | Yes |
+| `DATABASE_READ_REPLICA_HOST` | Read replica host | - | No |
+| `DATABASE_READ_REPLICA_PORT` | Read replica port | `5432` | No |
+| `DATABASE_READ_REPLICAS` | JSON array of read replicas | - | No |
 | `JWT_SECRET` | JWT signing secret | - | Yes |
 | `JWT_EXPIRES_IN` | JWT expiration time | `7d` | No |
 | `REDIS_HOST` | Redis host | `localhost` | No |

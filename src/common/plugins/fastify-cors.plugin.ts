@@ -37,9 +37,7 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
   // Get route-specific CORS configurations
   const routeConfigs = configService.cors.routes || [];
 
-  // Get environment-based domain configurations
-  const currentEnv = configService.app.environment;
-  const corsDomains = getAllowedDomains(configService, currentEnv);
+  const corsDomains = getAllowedDomains(configService);
 
   // Process allowed domains
   const allowedOrigins = new Set<string>();
@@ -83,9 +81,13 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
 
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: configService.cors.credentials ?? true,
+    methods: configService.cors.methods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: configService.cors.allowedHeaders || [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+    ],
   };
 
   // Process route-specific configurations
@@ -119,15 +121,22 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
     }
   });
 
-  // Add preHandler hook for CORS
-  fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+  // Add onRequest hook for CORS to intercept OPTIONS before routing
+  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const pathname = request.url.split('?')[0];
     let corsOptions: CorsOptions = defaultCorsOptions;
 
     // Find matching route-specific CORS configuration
     for (const route of processedRoutes) {
       if (route.matcher(pathname)) {
-        corsOptions = { ...defaultCorsOptions, ...route.options };
+        corsOptions = {
+          ...defaultCorsOptions,
+          ...route.options,
+          methods:
+            route.options.methods && route.options.methods.length > 0
+              ? route.options.methods
+              : defaultCorsOptions.methods,
+        };
         break;
       }
     }
@@ -135,16 +144,22 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       const origin = request.headers.origin as string;
+      let originAllowed = false;
 
-      if (corsOptions.origin) {
+      if (corsOptions.origin && origin) {
         if (typeof corsOptions.origin === 'boolean') {
-          if (corsOptions.origin) {
-            reply.header('Access-Control-Allow-Origin', origin || '*');
+          originAllowed = corsOptions.origin;
+          if (originAllowed) {
+            reply.header('Access-Control-Allow-Origin', origin);
           }
         } else if (typeof corsOptions.origin === 'string') {
-          reply.header('Access-Control-Allow-Origin', corsOptions.origin);
+          originAllowed = corsOptions.origin === origin;
+          if (originAllowed) {
+            reply.header('Access-Control-Allow-Origin', corsOptions.origin);
+          }
         } else if (Array.isArray(corsOptions.origin)) {
-          if (origin && corsOptions.origin.includes(origin)) {
+          originAllowed = corsOptions.origin.includes(origin);
+          if (originAllowed) {
             reply.header('Access-Control-Allow-Origin', origin);
           }
         } else if (typeof corsOptions.origin === 'function') {
@@ -157,29 +172,51 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
               if (allow) {
                 reply.header('Access-Control-Allow-Origin', origin);
               }
+
+              if (corsOptions.credentials) {
+                reply.header('Access-Control-Allow-Credentials', 'true');
+              }
+
+              if (corsOptions.methods) {
+                reply.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+              }
+
+              if (corsOptions.allowedHeaders) {
+                reply.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+              }
+
+              if (corsOptions.maxAge) {
+                reply.header('Access-Control-Max-Age', corsOptions.maxAge.toString());
+              }
+
+              reply.code(204).send();
               resolve();
             });
           });
         }
+      } else if (!origin) {
+        originAllowed = true;
       }
 
-      if (corsOptions.credentials) {
-        reply.header('Access-Control-Allow-Credentials', 'true');
-      }
+      if (typeof corsOptions.origin !== 'function') {
+        if (corsOptions.credentials) {
+          reply.header('Access-Control-Allow-Credentials', 'true');
+        }
 
-      if (corsOptions.methods) {
-        reply.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
-      }
+        if (corsOptions.methods) {
+          reply.header('Access-Control-Allow-Methods', corsOptions.methods.join(', '));
+        }
 
-      if (corsOptions.allowedHeaders) {
-        reply.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
-      }
+        if (corsOptions.allowedHeaders) {
+          reply.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(', '));
+        }
 
-      if (corsOptions.maxAge) {
-        reply.header('Access-Control-Max-Age', corsOptions.maxAge.toString());
-      }
+        if (corsOptions.maxAge) {
+          reply.header('Access-Control-Max-Age', corsOptions.maxAge.toString());
+        }
 
-      reply.code(204).send();
+        reply.code(204).send();
+      }
       return;
     }
 
@@ -189,12 +226,12 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
     if (corsOptions.origin && origin) {
       if (typeof corsOptions.origin === 'boolean') {
         if (corsOptions.origin) {
-          reply.header('Access-Control-Allow-Origin', origin);
+          reply.header('Access-Control-Allow-Origin', origin || '*');
         }
       } else if (typeof corsOptions.origin === 'string') {
         reply.header('Access-Control-Allow-Origin', corsOptions.origin);
       } else if (Array.isArray(corsOptions.origin)) {
-        if (corsOptions.origin.includes(origin)) {
+        if (origin && corsOptions.origin.includes(origin)) {
           reply.header('Access-Control-Allow-Origin', origin);
         }
       } else if (typeof corsOptions.origin === 'function') {
@@ -223,16 +260,15 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
   });
 }
 
-function getAllowedDomains(configService: ConfigurationService, env: string): (string | RegExp)[] {
-  const prodDomains = configService.cors.production || [];
-  const testDomains = configService.cors.testing || [];
-
-  let allowed: (string | RegExp)[] = [...prodDomains];
-  if (['development', 'staging', 'test', 'sandbox'].includes(env)) {
-    allowed = [...new Set([...allowed, ...testDomains])];
+function getAllowedDomains(configService: ConfigurationService): (string | RegExp)[] {
+  const corsConfig = configService.cors;
+  let domains: (string | RegExp)[] = [...(corsConfig.domains || [])];
+  if (configService.app.isProduction) {
+    domains = [...domains, ...(corsConfig.production || [])];
+  } else {
+    domains = [...domains, ...(corsConfig.production || []), ...(corsConfig.testing || [])];
   }
-
-  return allowed;
+  return domains;
 }
 
 export default fp(fastifyCorsPlugin, {

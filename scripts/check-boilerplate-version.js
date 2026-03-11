@@ -5,7 +5,54 @@ const fs = require('fs');
 const path = require('path');
 
 const BOILERPLATE_REMOTE = 'boilerplate';
-const BOILERPLATE_URL = 'https://github.com/your-org/nestjs-boilerplate.git';
+const BOILERPLATE_URL = 'https://github.com/mocaverse/nestjs-boilerplate.git';
+
+// Import the same categorization from update-boilerplate.js
+const SAFE_UPDATE_PATHS = [
+  'src/main.ts',
+  'src/common/',
+  'src/config/config.utils.ts',
+  'src/logger/',
+  'src/cache/',
+  'src/database/utils/',
+  'src/health/',
+  'src/sentry/',
+  'eslint.config.mjs',
+  'tsconfig.json',
+  'tsconfig.build.json',
+  'nest-cli.json',
+  'Dockerfile',
+  '.dockerignore',
+  '.gitignore',
+  '.prettierrc',
+  '.github/workflows/',
+  'scripts/',
+];
+
+const REVIEW_REQUIRED_PATHS = [
+];
+
+const PROTECTED_PATHS = [
+  'src/app.module.ts',
+  'package.json',
+  'README.md',
+  'docker-compose.yml',
+  '.aws/',
+  '.env',
+  '.env.example',
+  '.github/CODEOWNERS',
+  'src/config/configuration.ts',
+  'src/config/configuration.validation.ts',
+  'src/config/configuration.service.ts',
+  'src/config/config.types.ts',
+  'src/*/entities/',
+  'src/*/dto/',
+  'migrations/',
+  'src/verification-program/',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+  'package-lock.json',
+];
 
 function getLocalBoilerplateVersion() {
   try {
@@ -61,6 +108,47 @@ function getModifiedFiles() {
   } catch (error) {
     return [];
   }
+}
+
+function categorizeFiles(files) {
+  const categories = {
+    safe: [],
+    review: [],
+    protected: [],
+    other: [],
+  };
+
+  files.forEach(file => {
+    const isProtected = PROTECTED_PATHS.some(pattern => 
+      file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
+    );
+    
+    if (isProtected) {
+      categories.protected.push(file);
+      return;
+    }
+
+    const needsReview = REVIEW_REQUIRED_PATHS.some(pattern => 
+      file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
+    );
+    
+    if (needsReview) {
+      categories.review.push(file);
+      return;
+    }
+
+    const isSafe = SAFE_UPDATE_PATHS.some(pattern => 
+      file.includes(pattern) || file.match(new RegExp(pattern.replace('*', '.*')))
+    );
+    
+    if (isSafe) {
+      categories.safe.push(file);
+    } else {
+      categories.other.push(file);
+    }
+  });
+
+  return categories;
 }
 
 function checkForSecurityUpdates(changes) {
@@ -160,11 +248,32 @@ function displayUpdateInfo(localVersion, remoteVersion, changes, modifiedFiles) 
   }
 
   if (modifiedFiles.length > 0) {
-    console.log(`📁 Files that would be updated (${modifiedFiles.length}):`);
-    modifiedFiles.slice(0, 10).forEach(file => console.log(`   ${file}`));
-    if (modifiedFiles.length > 10) {
-      console.log(`   ... and ${modifiedFiles.length - 10} more files`);
+    const categorized = categorizeFiles(modifiedFiles);
+    const syncableCount = categorized.safe.length + categorized.review.length;
+    
+    console.log(`📁 Files available for sync (${syncableCount} of ${modifiedFiles.length} total):`);
+    
+    if (categorized.safe.length > 0) {
+      console.log(`\n✅ SAFE TO SYNC (${categorized.safe.length}):`);
+      categorized.safe.slice(0, 10).forEach(file => console.log(`   ${file}`));
+      if (categorized.safe.length > 10) {
+        console.log(`   ... and ${categorized.safe.length - 10} more`);
+      }
     }
+    
+    if (categorized.review.length > 0) {
+      console.log(`\n🟡 NEEDS REVIEW (${categorized.review.length}):`);
+      categorized.review.forEach(file => console.log(`   ${file}`));
+    }
+    
+    if (categorized.protected.length > 0) {
+      console.log(`\n🔒 PROTECTED - NOT SYNCED (${categorized.protected.length}):`);
+      categorized.protected.slice(0, 5).forEach(file => console.log(`   ${file}`));
+      if (categorized.protected.length > 5) {
+        console.log(`   ... and ${categorized.protected.length - 5} more project-specific files`);
+      }
+    }
+    
     console.log('');
   }
 
