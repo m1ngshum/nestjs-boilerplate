@@ -38,9 +38,12 @@ export class MethodLoggingInterceptor implements NestInterceptor {
 
     // Log method entry
     const entryMessage = logOptions.message || `${methodName} called`;
-    methodLogger[logOptions.level || 'info'](entryMessage, {
-      ...(args && { arguments: this.sanitizeArgs(args) }),
-    });
+    (methodLogger as unknown as Record<string, Function>)[logOptions.level || 'info'](
+      entryMessage,
+      {
+        ...(args && { arguments: this.sanitizeArgs(args) }),
+      },
+    );
 
     return next.handle().pipe(
       tap((result) => {
@@ -48,10 +51,13 @@ export class MethodLoggingInterceptor implements NestInterceptor {
 
         // Log method completion
         const completionMessage = `${methodName} completed`;
-        methodLogger[logOptions.level || 'info'](completionMessage, {
-          duration: `${duration}ms`,
-          ...(logOptions.logResult && { result: this.sanitizeResult(result) }),
-        });
+        (methodLogger as unknown as Record<string, Function>)[logOptions.level || 'info'](
+          completionMessage,
+          {
+            duration: `${duration}ms`,
+            ...(logOptions.logResult && { result: this.sanitizeResult(result) }),
+          },
+        );
 
         // Log performance if method is slow
         if (duration > 1000) {

@@ -185,9 +185,15 @@ export default registerAs('config', (): AppConfiguration => {
       host: process.env.DATABASE_HOST || 'localhost',
       port: parseInt(process.env.DATABASE_PORT || '5432', 10),
       username: process.env.DATABASE_USERNAME || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'password',
+      password:
+        process.env.DATABASE_PASSWORD ||
+        (nodeEnv === 'production'
+          ? (() => {
+              throw new Error('DATABASE_PASSWORD is required in production');
+            })()
+          : 'password'),
       database: process.env.DATABASE_NAME || 'nestjs_boilerplate',
-      synchronize: process.env.DATABASE_SYNCHRONIZE === 'true' || nodeEnv === 'development',
+      synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
       logging: process.env.DATABASE_LOGGING === 'true' || nodeEnv === 'development',
       ssl: process.env.DATABASE_SSL === 'true',
       autoMigrate: process.env.DATABASE_AUTO_MIGRATE === 'true',
@@ -220,9 +226,21 @@ export default registerAs('config', (): AppConfiguration => {
     },
 
     auth: {
-      jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+      jwtSecret:
+        process.env.JWT_SECRET ||
+        (nodeEnv === 'production'
+          ? (() => {
+              throw new Error('JWT_SECRET is required in production');
+            })()
+          : 'your-super-secret-jwt-key'),
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-      jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key',
+      jwtRefreshSecret:
+        process.env.JWT_REFRESH_SECRET ||
+        (nodeEnv === 'production'
+          ? (() => {
+              throw new Error('JWT_REFRESH_SECRET is required in production');
+            })()
+          : 'your-super-secret-refresh-key'),
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
       enableGoogleAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
       googleClientId: process.env.GOOGLE_CLIENT_ID,
@@ -256,9 +274,9 @@ export default registerAs('config', (): AppConfiguration => {
     },
 
     cors: {
-      origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+      origin: process.env.CORS_ORIGIN?.split(',').map((s) => s.trim()) || ['http://localhost:3000'],
       credentials: process.env.CORS_CREDENTIALS === 'true',
-      methods: process.env.CORS_METHODS?.split(',') || [
+      methods: process.env.CORS_METHODS?.split(',').map((s) => s.trim()) || [
         'GET',
         'POST',
         'PUT',
@@ -266,15 +284,15 @@ export default registerAs('config', (): AppConfiguration => {
         'PATCH',
         'OPTIONS',
       ],
-      allowedHeaders: process.env.CORS_ALLOWED_HEADERS?.split(',') || [
+      allowedHeaders: process.env.CORS_ALLOWED_HEADERS?.split(',').map((s) => s.trim()) || [
         'Content-Type',
         'Authorization',
         'Accept',
       ],
 
       // Advanced CORS configuration for route-specific handling
-      domains: process.env.CORS_DOMAINS?.split(',') || [],
-      production: process.env.CORS_PRODUCTION_DOMAINS?.split(',') || [],
+      domains: process.env.CORS_DOMAINS?.split(',').map((s) => s.trim()) || [],
+      production: process.env.CORS_PRODUCTION_DOMAINS?.split(',').map((s) => s.trim()) || [],
       testing: [
         `localhost:${process.env.APP_PORT || 3000}`,
         'localhost:3000',
@@ -335,15 +353,28 @@ export default registerAs('config', (): AppConfiguration => {
         enabled: process.env.SECURITY_CSP_ENABLED !== 'false',
         reportOnly: process.env.SECURITY_CSP_REPORT_ONLY === 'true',
         directives: {
-          defaultSrc: process.env.SECURITY_CSP_DEFAULT_SRC?.split(',') || [`'self'`],
-          scriptSrc: process.env.SECURITY_CSP_SCRIPT_SRC?.split(',') || [
+          defaultSrc: process.env.SECURITY_CSP_DEFAULT_SRC?.split(',').map((s) => s.trim()) || [
             `'self'`,
-            `'unsafe-inline'`,
           ],
-          styleSrc: process.env.SECURITY_CSP_STYLE_SRC?.split(',') || [`'self'`, `'unsafe-inline'`],
-          imgSrc: process.env.SECURITY_CSP_IMG_SRC?.split(',') || [`'self'`, 'data:', 'https:'],
-          fontSrc: process.env.SECURITY_CSP_FONT_SRC?.split(',') || [`'self'`, 'https:', 'data:'],
-          connectSrc: process.env.SECURITY_CSP_CONNECT_SRC?.split(',') || [`'self'`],
+          scriptSrc: process.env.SECURITY_CSP_SCRIPT_SRC?.split(',').map((s) => s.trim()) || [
+            `'self'`,
+          ],
+          styleSrc: process.env.SECURITY_CSP_STYLE_SRC?.split(',').map((s) => s.trim()) || [
+            `'self'`,
+          ],
+          imgSrc: process.env.SECURITY_CSP_IMG_SRC?.split(',').map((s) => s.trim()) || [
+            `'self'`,
+            'data:',
+            'https:',
+          ],
+          fontSrc: process.env.SECURITY_CSP_FONT_SRC?.split(',').map((s) => s.trim()) || [
+            `'self'`,
+            'https:',
+            'data:',
+          ],
+          connectSrc: process.env.SECURITY_CSP_CONNECT_SRC?.split(',').map((s) => s.trim()) || [
+            `'self'`,
+          ],
         },
       },
       frameOptions: (process.env.SECURITY_FRAME_OPTIONS as 'deny' | 'sameorigin') || 'deny',

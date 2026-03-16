@@ -14,16 +14,30 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
     }
   }
 
-  // Check for common issues
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Check for insecure default secrets
   if (process.env.JWT_SECRET === 'your-super-secret-jwt-key') {
-    warnings.push('JWT_SECRET is using the default value. Please change it for production.');
+    if (isProduction) {
+      errors.push('JWT_SECRET is using the default value. Set a secure secret for production.');
+    } else {
+      warnings.push('JWT_SECRET is using the default value. Please change it for production.');
+    }
   }
 
   if (process.env.DATABASE_PASSWORD === 'password') {
-    warnings.push('DATABASE_PASSWORD is using the default value. Please change it for production.');
+    if (isProduction) {
+      errors.push(
+        'DATABASE_PASSWORD is using the default value. Set a secure password for production.',
+      );
+    } else {
+      warnings.push(
+        'DATABASE_PASSWORD is using the default value. Please change it for production.',
+      );
+    }
   }
 
-  if (process.env.NODE_ENV === 'production') {
+  if (isProduction) {
     if (process.env.DATABASE_SYNCHRONIZE === 'true') {
       warnings.push('DATABASE_SYNCHRONIZE should be false in production.');
     }
@@ -34,20 +48,6 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
 
     if (process.env.SWAGGER_ENABLED !== 'false') {
       warnings.push('SWAGGER_ENABLED should be false in production for security.');
-    }
-
-    if (!process.env.AIR_USER_JWT_JWKS_URI) {
-      errors.push('AIR_USER_JWT_JWKS_URI is not set. Consider adding a valid JWT JWKS URI.');
-    }
-
-    if (!process.env.AIR_USER_JWT_EXPECTED_AUDIENCE) {
-      warnings.push(
-        'AIR_USER_JWT_EXPECTED_AUDIENCE is not set. Consider adding a valid JWT expected audience.',
-      );
-    }
-
-    if (!process.env.AIR_USER_JWT_ISSUER) {
-      warnings.push('AIR_USER_JWT_ISSUER is not set. Consider adding a valid JWT issuer.');
     }
   }
 

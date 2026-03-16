@@ -32,7 +32,7 @@ import { LoggerService } from '../logger/logger.service';
           password: dbConfig.password,
           dbName: dbConfig.database,
           debug: configService.isDevelopment(),
-          logger: (message) => loggerService.log(message),
+          logger: (message: string) => loggerService.log(message),
           migrations: {
             path: Utils.detectTsNode() ? 'src/migrations' : 'dist/migrations',
             safe: true,
