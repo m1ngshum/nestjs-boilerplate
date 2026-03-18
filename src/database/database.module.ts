@@ -8,7 +8,6 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { DatabaseService } from './database.service';
 import { PaginationService } from './pagination.service';
 import { DatabaseHealthIndicator } from './database-health.indicator';
-import { ReadReplicaService } from './read-replica.service';
 import { LoggerService } from '../logger/logger.service';
 
 @Module({
@@ -64,13 +63,7 @@ import { LoggerService } from '../logger/logger.service';
     // Register entities for repository injection
     MikroOrmModule.forFeature([]),
   ],
-  providers: [DatabaseService, PaginationService, DatabaseHealthIndicator, ReadReplicaService],
-  exports: [
-    DatabaseService,
-    PaginationService,
-    DatabaseHealthIndicator,
-    ReadReplicaService,
-    MikroOrmModule,
-  ],
+  providers: [DatabaseService, PaginationService, DatabaseHealthIndicator],
+  exports: [DatabaseService, PaginationService, DatabaseHealthIndicator, MikroOrmModule],
 })
 export class DatabaseModule {}

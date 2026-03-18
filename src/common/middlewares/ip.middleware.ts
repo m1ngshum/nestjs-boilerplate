@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
 import { getClientIpAndUserAgent } from '../utils/request-utils';
-import { CLIENT_IP, CLIENT_USER_AGENT } from '../async-context-key';
+import { CLIENT_IP, CLIENT_USER_AGENT } from '../constants/async-context-key';
 import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
 
 @Injectable()

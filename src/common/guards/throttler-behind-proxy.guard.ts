@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerCustomPath } from '../types/throttler.type';
-import { CLIENT_IP } from '../async-context-key';
+import { CLIENT_IP } from '../constants/async-context-key';
 import { ClsService } from 'nestjs-cls';
 
 @Injectable()

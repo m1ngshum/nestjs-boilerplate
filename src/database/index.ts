@@ -5,8 +5,6 @@ export * from './database.module';
 export * from './database.service';
 export * from './pagination.service';
 export * from './database-health.indicator';
-export * from './read-replica.service';
-
 // Entities
 export * from './entities';
 

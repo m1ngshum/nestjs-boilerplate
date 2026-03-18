@@ -263,15 +263,7 @@ export default registerAs('config', (): AppConfiguration => {
         'http://localhost:3001',
         ...(process.env.CORS_TESTING_DOMAINS?.split(',') || []),
       ],
-      routes: [
-        // Example route-specific CORS configuration
-        {
-          path: '/v1/public',
-          options: { origin: '*' },
-        },
-        // Add more route-specific configurations from environment
-        ...JSON.parse(process.env.CORS_ROUTES_JSON || '[]'),
-      ],
+      routes: JSON.parse(process.env.CORS_ROUTES_JSON || '[]'),
     },
 
     throttle: {

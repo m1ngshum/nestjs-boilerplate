@@ -1,21 +1,14 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { MikroORM, EntityManager, Connection } from '@mikro-orm/postgresql';
 import { InjectMikroORM } from '@mikro-orm/nestjs';
 import { ConfigurationService } from '../config/configuration.service';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService implements OnModuleDestroy {
   constructor(
     @InjectMikroORM('default') private readonly orm: MikroORM,
     private readonly configService: ConfigurationService,
   ) {}
-
-  async onModuleInit() {
-    // Run migrations in production
-    if (this.configService.isProduction()) {
-      await this.runMigrations();
-    }
-  }
 
   async onModuleDestroy() {
     await this.orm.close();
@@ -163,45 +156,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       pending: pending.map((m) => m.name),
       executed: executed.map((m) => m.name),
     };
-  }
-
-  /**
-   * Create database schema
-   */
-  async createSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.createSchema();
-  }
-
-  /**
-   * Update database schema
-   */
-  async updateSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.updateSchema();
-  }
-
-  /**
-   * Drop database schema
-   */
-  async dropSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.dropSchema();
-  }
-
-  /**
-   * Refresh database schema (drop and create)
-   */
-  async refreshSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.refreshDatabase();
-  }
-
-  /**
-   * Execute raw SQL query
-   */
-  async executeRaw(sql: string, params?: any[]): Promise<any> {
-    return this.orm.em.getConnection().execute(sql, params);
   }
 
   /**
