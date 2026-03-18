@@ -78,6 +78,13 @@ export class CacheService {
   async del(key: string | string[]): Promise<boolean> {
     try {
       const keys = Array.isArray(key) ? key : [key];
+      // In cluster mode, DEL across multiple slots causes CROSSSLOT errors.
+      // Issue individual DELs in parallel instead.
+      if (this.valkey instanceof Cluster && keys.length > 1) {
+        const results = await Promise.all(keys.map((k) => this.valkey.del(k)));
+        this.logger.debug(`Cache DEL: ${keys.join(', ')}`);
+        return results.some((r) => r > 0);
+      }
       const result = await this.valkey.del(keys);
       this.logger.debug(`Cache DEL: ${keys.join(', ')}`);
       return result > 0;
@@ -112,7 +119,12 @@ export class CacheService {
     try {
       const results = await Promise.all(
         chunks.map(async (chunk) => {
-          const values = await this.valkey.mget(chunk);
+          // In cluster mode, MGET across different slots causes CROSSSLOT errors.
+          // Fall back to parallel individual GETs.
+          const values =
+            this.valkey instanceof Cluster
+              ? await Promise.all(chunk.map((k) => this.valkey.get(k)))
+              : await this.valkey.mget(chunk);
           return values.map((value) => (value ? (JSON.parse(value) as T) : null));
         }),
       );
