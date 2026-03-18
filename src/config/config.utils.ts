@@ -20,9 +20,7 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
   }
 
   if (process.env.DATABASE_PASSWORD === 'password') {
-    warnings.push(
-      'DATABASE_PASSWORD is `using the default value. Please change it for production.',
-    );
+    warnings.push('DATABASE_PASSWORD is using the default value. Please change it for production.');
   }
 
   if (process.env.NODE_ENV === 'production') {

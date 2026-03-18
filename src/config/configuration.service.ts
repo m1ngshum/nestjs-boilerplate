@@ -4,7 +4,6 @@ import {
   AppConfiguration,
   AppConfig,
   DatabaseConfig,
-  AuthConfig,
   CacheConfig,
   ValkeyConfig,
   SentryConfig,
@@ -27,10 +26,6 @@ export class ConfigurationService {
 
   get database(): DatabaseConfig {
     return this.configService.get<DatabaseConfig>('config.database', { infer: true })!;
-  }
-
-  get auth(): AuthConfig {
-    return this.configService.get<AuthConfig>('config.auth', { infer: true })!;
   }
 
   get cache(): CacheConfig {
@@ -109,14 +104,12 @@ export class ConfigurationService {
   /**
    * Check if a feature is enabled
    */
-  isFeatureEnabled(feature: 'sentry' | 'redis' | 'googleAuth' | 'swagger' | 'health'): boolean {
+  isFeatureEnabled(feature: 'sentry' | 'redis' | 'swagger' | 'health'): boolean {
     switch (feature) {
       case 'sentry':
         return this.sentry.enabled;
       case 'redis':
         return this.cache.type === 'redis';
-      case 'googleAuth':
-        return this.auth.enableGoogleAuth;
       case 'swagger':
         return this.swagger.enabled;
       case 'health':
@@ -139,45 +132,6 @@ export class ConfigurationService {
       port: this.cache.port,
       password: this.cache.password,
       db: this.cache.db,
-    };
-  }
-
-  /**
-   * Get JWT configuration
-   */
-  getJwtConfig() {
-    return {
-      secret: this.auth.jwtSecret,
-      signOptions: {
-        expiresIn: this.auth.jwtExpiresIn,
-      },
-    };
-  }
-
-  /**
-   * Get JWT refresh configuration
-   */
-  getJwtRefreshConfig() {
-    return {
-      secret: this.auth.jwtRefreshSecret,
-      signOptions: {
-        expiresIn: this.auth.jwtRefreshExpiresIn,
-      },
-    };
-  }
-
-  /**
-   * Get Google OAuth configuration
-   */
-  getGoogleOAuthConfig() {
-    if (!this.auth.enableGoogleAuth) {
-      return null;
-    }
-
-    return {
-      clientID: this.auth.googleClientId!,
-      clientSecret: this.auth.googleClientSecret!,
-      callbackURL: `${this.app.url}/v1/auth/google/callback`,
     };
   }
 

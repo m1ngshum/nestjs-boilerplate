@@ -18,7 +18,6 @@ export type LogFormat = 'json' | 'simple';
 export interface FeatureFlags {
   sentry: boolean;
   redis: boolean;
-  googleAuth: boolean;
   swagger: boolean;
   health: boolean;
 }
@@ -59,25 +58,6 @@ export interface RedisConnectionOptions {
 }
 
 /**
- * JWT configuration options
- */
-export interface JwtOptions {
-  secret: string;
-  signOptions: {
-    expiresIn: string;
-  };
-}
-
-/**
- * Google OAuth configuration
- */
-export interface GoogleOAuthOptions {
-  clientID: string;
-  clientSecret: string;
-  callbackURL: string;
-}
-
-/**
  * Sentry configuration options
  */
 export interface SentryOptions {
@@ -113,8 +93,6 @@ export const CONFIG_CONSTANTS = {
   DEFAULT_HOST: '0.0.0.0',
   DEFAULT_DATABASE_PORT: 5432,
   DEFAULT_REDIS_PORT: 6379,
-  DEFAULT_JWT_EXPIRES_IN: '7d',
-  DEFAULT_JWT_REFRESH_EXPIRES_IN: '30d',
   DEFAULT_CACHE_TTL: 300, // 5 minutes
   DEFAULT_THROTTLE_TTL: 60, // 1 minute
   DEFAULT_THROTTLE_LIMIT: 10,
@@ -126,8 +104,9 @@ export const CONFIG_CONSTANTS = {
 
 /**
  * Required environment variables
+ * Note: Database fields (DATABASE_HOST, etc.) have defaults and are validated separately
  */
-export const REQUIRED_ENV_VARS = ['JWT_SECRET', 'DATABASE_URL'] as const;
+export const REQUIRED_ENV_VARS = [] as const;
 
 /**
  * Optional environment variables with defaults
@@ -143,8 +122,6 @@ export const OPTIONAL_ENV_VARS = {
   DATABASE_USERNAME: 'postgres',
   DATABASE_PASSWORD: 'password',
   DATABASE_NAME: 'nestjs_boilerplate',
-  JWT_EXPIRES_IN: '7d',
-  JWT_REFRESH_EXPIRES_IN: '30d',
   CACHE_TTL: '300',
   THROTTLE_TTL: '60',
   THROTTLE_LIMIT: '10',

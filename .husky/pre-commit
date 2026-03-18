@@ -2,8 +2,7 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run ESLint
-echo "📝 Running ESLint..."
-pnpm lint && pnpm format:check
+# Run lint-staged (only lints staged files and auto-stages fixes)
+npx lint-staged
 
 echo "✅ Pre-commit checks passed!"

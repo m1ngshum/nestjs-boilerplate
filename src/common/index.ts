@@ -13,6 +13,9 @@ export * from './pipes/validation.pipe';
 // Middlewares
 export * from './middlewares';
 
+// Tracing
+export * from './tracing';
+
 // Utils
 export * from './utils/request-utils';
 

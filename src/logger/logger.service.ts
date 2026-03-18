@@ -4,8 +4,13 @@ import * as winston from 'winston';
 import { ClsService } from 'nestjs-cls';
 
 export interface LogContext {
-  correlationId?: string;
+  // Distributed tracing
+  traceId?: string;
+  spanId?: string;
+  parentSpanId?: string;
   requestId?: string;
+  correlationId?: string;
+  // Request info
   userAgent?: string;
   ip?: string;
   method?: string;
@@ -96,16 +101,30 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * Get enhanced context with correlation ID and other metadata
+   * Get enhanced context with trace IDs and other metadata
    */
   private getEnhancedContext(): LogContext {
     const context: LogContext = {};
 
-    // Get correlation ID from CLS
+    // Get trace context from CLS
     try {
-      const correlationId = this.cls.getId();
-      if (correlationId) {
-        context.correlationId = correlationId;
+      const traceId = this.cls.get('traceId');
+      const spanId = this.cls.get('spanId');
+      const parentSpanId = this.cls.get('parentSpanId');
+      const requestId = this.cls.get('requestId') || this.cls.getId();
+
+      if (traceId) {
+        context.traceId = traceId;
+      }
+      if (spanId) {
+        context.spanId = spanId;
+      }
+      if (parentSpanId) {
+        context.parentSpanId = parentSpanId;
+      }
+      if (requestId) {
+        context.requestId = requestId;
+        context.correlationId = requestId; // Keep correlationId for backward compatibility
       }
     } catch (error) {
       // CLS might not be available in all contexts

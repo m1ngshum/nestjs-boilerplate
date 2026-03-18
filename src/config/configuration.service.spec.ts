@@ -64,30 +64,6 @@ describe('ConfigurationService', () => {
     });
   });
 
-  describe('auth configuration', () => {
-    it('should return auth configuration', () => {
-      const authConfig = service.auth;
-      expect(authConfig).toBeDefined();
-      expect(authConfig.jwtSecret).toBeDefined();
-      expect(authConfig.jwtExpiresIn).toBeDefined();
-    });
-
-    it('should return JWT configuration', () => {
-      const jwtConfig = service.getJwtConfig();
-      expect(jwtConfig).toBeDefined();
-      expect(jwtConfig.secret).toBeDefined();
-      expect(jwtConfig.signOptions).toBeDefined();
-      expect(jwtConfig.signOptions.expiresIn).toBeDefined();
-    });
-
-    it('should return JWT refresh configuration', () => {
-      const jwtRefreshConfig = service.getJwtRefreshConfig();
-      expect(jwtRefreshConfig).toBeDefined();
-      expect(jwtRefreshConfig.secret).toBeDefined();
-      expect(jwtRefreshConfig.signOptions).toBeDefined();
-    });
-  });
-
   describe('cache configuration', () => {
     it('should return cache configuration', () => {
       const cacheConfig = service.cache;
@@ -125,38 +101,6 @@ describe('ConfigurationService', () => {
 
       delete process.env.REDIS_HOST;
       expect(service.isFeatureEnabled('redis')).toBe(false);
-    });
-
-    it('should check if Google Auth is enabled', () => {
-      process.env.GOOGLE_CLIENT_ID = 'test-client-id';
-      process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
-      expect(service.isFeatureEnabled('googleAuth')).toBe(true);
-
-      delete process.env.GOOGLE_CLIENT_ID;
-      delete process.env.GOOGLE_CLIENT_SECRET;
-      expect(service.isFeatureEnabled('googleAuth')).toBe(false);
-    });
-  });
-
-  describe('Google OAuth configuration', () => {
-    it('should return Google OAuth config when enabled', () => {
-      process.env.GOOGLE_CLIENT_ID = 'test-client-id';
-      process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
-      process.env.APP_URL = 'http://localhost:3000';
-
-      const googleConfig = service.getGoogleOAuthConfig();
-      expect(googleConfig).toBeDefined();
-      expect(googleConfig?.clientID).toBe('test-client-id');
-      expect(googleConfig?.clientSecret).toBe('test-client-secret');
-      expect(googleConfig?.callbackURL).toBe('http://localhost:3000/api/v1/auth/google/callback');
-    });
-
-    it('should return null when Google OAuth is not configured', () => {
-      delete process.env.GOOGLE_CLIENT_ID;
-      delete process.env.GOOGLE_CLIENT_SECRET;
-
-      const googleConfig = service.getGoogleOAuthConfig();
-      expect(googleConfig).toBeNull();
     });
   });
 
