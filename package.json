@@ -23,6 +23,7 @@
     "start:prod": "node dist/src/main",
     "repl": "nest start --entryFile repl",
     "repl:dev": "nest start --debug --watch --entryFile repl",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "lint:strict": "eslint \"src/**/*.ts\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
@@ -38,8 +39,6 @@
     "setup:new-project": "node scripts/setup-new-project.js",
     "update:boilerplate": "node scripts/update-boilerplate.js",
     "check:boilerplate": "node scripts/check-boilerplate-version.js",
-    "yarn:upgrade": "yarn upgrade-interactive",
-    "yarn:why": "yarn why @nestjs/core",
     "prepare": "husky"
   },
   "dependencies": {
@@ -146,9 +145,6 @@
       "<rootDir>",
       "node_modules",
       "src"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/test/setup.ts"
     ]
   },
   "pnpm": {

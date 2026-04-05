@@ -106,7 +106,12 @@ export const CONFIG_CONSTANTS = {
  * Required environment variables
  * Note: Database fields (DATABASE_HOST, etc.) have defaults and are validated separately
  */
-export const REQUIRED_ENV_VARS = [] as const;
+export const REQUIRED_ENV_VARS = [
+  'DATABASE_HOST',
+  'DATABASE_NAME',
+  'DATABASE_USERNAME',
+  'DATABASE_PASSWORD',
+] as const;
 
 /**
  * Optional environment variables with defaults

@@ -43,13 +43,8 @@ export class HealthService {
    * Check if application is ready to serve requests
    */
   async isReady(): Promise<boolean> {
-    try {
-      // Add any readiness checks here
-      // For example, database connectivity, external service availability
-      return true;
-    } catch (_error) {
-      return false;
-    }
+    // Add readiness checks here (e.g., database connectivity, external service availability)
+    return true;
   }
 
   /**

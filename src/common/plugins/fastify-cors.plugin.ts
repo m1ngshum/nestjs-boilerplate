@@ -117,7 +117,9 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
 
       processedRoutes.push({ matcher, options: finalOptions });
     } catch (e) {
-      console.error(`Failed to process CORS route ${route.path}:`, e);
+      throw new Error(
+        `Failed to process CORS route ${route.path}: ${e instanceof Error ? e.message : String(e)}`,
+      );
     }
   });
 
