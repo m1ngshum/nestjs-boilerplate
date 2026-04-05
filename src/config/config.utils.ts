@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { ConfigValidationResult, REQUIRED_ENV_VARS } from './config.types';
 
 /**
@@ -16,25 +17,13 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
 
   const isProduction = process.env.NODE_ENV === 'production';
 
-  // Check for insecure default secrets
-  if (process.env.JWT_SECRET === 'your-super-secret-jwt-key') {
-    if (isProduction) {
-      errors.push('JWT_SECRET is using the default value. Set a secure secret for production.');
-    } else {
-      warnings.push('JWT_SECRET is using the default value. Please change it for production.');
-    }
+  // Check for missing secrets
+  if (!process.env.JWT_SECRET) {
+    errors.push('JWT_SECRET must be set via environment variable.');
   }
 
-  if (process.env.DATABASE_PASSWORD === 'password') {
-    if (isProduction) {
-      errors.push(
-        'DATABASE_PASSWORD is using the default value. Set a secure password for production.',
-      );
-    } else {
-      warnings.push(
-        'DATABASE_PASSWORD is using the default value. Please change it for production.',
-      );
-    }
+  if (!process.env.DATABASE_PASSWORD) {
+    errors.push('DATABASE_PASSWORD must be set via environment variable.');
   }
 
   if (isProduction) {
@@ -166,17 +155,10 @@ export function maskSensitiveConfig(config: Record<string, any>): Record<string,
 }
 
 /**
- * Generate a secure random string for secrets
+ * Generate a cryptographically secure random string for secrets
  */
 export function generateSecureSecret(length: number = 32): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  let result = '';
-
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return result;
+  return randomBytes(length).toString('base64url').slice(0, length);
 }
 
 /**
