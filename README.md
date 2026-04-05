@@ -8,7 +8,7 @@ A comprehensive, production-ready NestJS boilerplate with authentication, loggin
 - 🔐 **Authentication** - JWT-based authentication with refresh tokens
 - 📊 **Database** - PostgreSQL with MikroORM, migrations, and read replica support
 - 🗄️ **Caching** - Redis and in-memory caching support with Fastify integration
-- 📝 **Logging** - Structured logging with Winston
+- 📝 **Logging** - Structured logging with Pino (automatic secret redaction)
 - 🛡️ **Security** - Fastify Helmet, advanced CORS, rate limiting, and validation
 - 📚 **API Documentation** - Swagger/OpenAPI with Fastify integration
 - 🔍 **Error Tracking** - Official Sentry NestJS integration
@@ -37,7 +37,7 @@ cd nestjs-boilerplate
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Copy environment variables:
@@ -45,17 +45,18 @@ npm install
 cp .env.example .env
 ```
 
-4. Update the `.env` file with your configuration:
+4. Update the `.env` file with your configuration (all secrets must be provided via environment variables — there are no fallback defaults):
 ```bash
-# Database
+# Database (required)
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=password
+DATABASE_PASSWORD=<your-secure-password>
 DATABASE_NAME=your_database_name
 
-# JWT
-JWT_SECRET=your-super-secret-jwt-key
+# JWT (required)
+JWT_SECRET=<your-jwt-secret>
+JWT_REFRESH_SECRET=<your-refresh-secret>
 
 # Optional: Redis
 REDIS_HOST=localhost
@@ -67,15 +68,15 @@ SENTRY_DSN=your-sentry-dsn
 
 5. Run database migrations:
 ```bash
-npm run db:migration:up
+pnpm run db:migration:up
 ```
 
 6. Start the development server:
 ```bash
-npm run start:dev
+pnpm run start:dev
 ```
 
-The API will be available at `http://localhost:3000` and Swagger documentation at `http://localhost:3000/api/docs`.
+The API will be available at `http://localhost:3000` and Swagger documentation at `http://localhost:3000/docs`.
 
 ## Environment Variables
 
@@ -104,18 +105,18 @@ See `.env.example` for a complete list of available environment variables.
 
 | Command | Description |
 |---------|-------------|
-| `npm run start` | Start the application |
-| `npm run start:dev` | Start in development mode with hot reload |
-| `npm run start:prod` | Start in production mode |
-| `npm run build` | Build the application |
-| `npm run test` | Run unit tests |
-| `npm run test:e2e` | Run end-to-end tests |
-| `npm run test:cov` | Run tests with coverage |
-| `npm run lint` | Lint and fix code |
-| `npm run format` | Format code with Prettier |
-| `npm run db:migration:create` | Create a new database migration |
-| `npm run db:migration:up` | Run pending migrations |
-| `npm run db:migration:down` | Rollback last migration |
+| `pnpm run start` | Start the application |
+| `pnpm run start:dev` | Start in development mode with hot reload |
+| `pnpm run start:prod` | Start in production mode |
+| `pnpm run build` | Build the application |
+| `pnpm run test` | Run unit tests |
+| `pnpm run test:e2e` | Run end-to-end tests |
+| `pnpm run test:cov` | Run tests with coverage |
+| `pnpm run lint` | Lint and fix code |
+| `pnpm run format` | Format code with Prettier |
+| `pnpm run db:migration:create` | Create a new database migration |
+| `pnpm run db:migration:up` | Run pending migrations |
+| `pnpm run db:migration:down` | Rollback last migration |
 
 ## Project Structure
 
@@ -127,7 +128,7 @@ src/
 ├── config/               # Configuration management
 ├── database/             # Database connection and utilities
 ├── health/               # Health check endpoints
-├── logger/               # Logging module
+├── logger/               # Pino logging with secret redaction
 ├── sentry/               # Error tracking
 ├── tracking/             # Analytics and event tracking
 ├── app.controller.ts     # Main application controller
@@ -139,8 +140,8 @@ src/
 ## API Documentation
 
 When the application is running, you can access the Swagger documentation at:
-- Development: `http://localhost:3000/api/docs`
-- Production: `https://your-domain.com/api/docs`
+- Development: `http://localhost:3000/docs`
+- Production: `https://your-domain.com/docs`
 
 ## Authentication
 
@@ -159,17 +160,17 @@ The application uses PostgreSQL with MikroORM. Database entities are located in 
 
 Create a new migration:
 ```bash
-npm run db:migration:create
+pnpm run db:migration:create
 ```
 
 Run migrations:
 ```bash
-npm run db:migration:up
+pnpm run db:migration:up
 ```
 
 Rollback migration:
 ```bash
-npm run db:migration:down
+pnpm run db:migration:down
 ```
 
 ## Caching
@@ -196,22 +197,22 @@ SENTRY_ENVIRONMENT=production
 ## Health Checks
 
 Health check endpoints are available at:
-- `GET /api/v1/health` - Overall health status
-- `GET /api/v1/health/database` - Database connectivity
-- `GET /api/v1/health/redis` - Redis connectivity (if configured)
+- `GET /health` - Overall health status
+- `GET /health/database` - Database connectivity
+- `GET /health/redis` - Redis connectivity (if configured)
 
 ## Testing
 
 Run tests:
 ```bash
 # Unit tests
-npm run test
+pnpm run test
 
 # E2E tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Test coverage
-npm run test:cov
+pnpm run test:cov
 ```
 
 ## Docker
@@ -226,11 +227,19 @@ docker build -t nestjs-boilerplate .
 docker run -p 3000:3000 nestjs-boilerplate
 ```
 
-Or use Docker Compose:
+Or use Docker Compose (requires `POSTGRES_PASSWORD` and `REDIS_PASSWORD` environment variables):
 
 ```bash
+export POSTGRES_PASSWORD=<your-password>
+export REDIS_PASSWORD=<your-password>
 docker-compose up
 ```
+
+Docker security features:
+- Ports bound to `127.0.0.1` only (not exposed externally)
+- Passwords required via environment variables (no defaults)
+- Node.js-based health check (no curl dependency)
+- Multi-stage build with corepack for pnpm
 
 ## Contributing
 

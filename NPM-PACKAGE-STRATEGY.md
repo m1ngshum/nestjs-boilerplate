@@ -34,11 +34,11 @@ mkdir nestjs-boilerplate-core
 cd nestjs-boilerplate-core
 
 # Initialize package
-npm init -y
+pnpm init
 
 # Install dependencies
-npm install @nestjs/common @nestjs/config @nestjs/core
-npm install -D typescript @types/node
+pnpm add @nestjs/common @nestjs/config @nestjs/core
+pnpm add -D typescript @types/node
 
 # Setup TypeScript
 npx tsc --init
@@ -60,7 +60,7 @@ npx tsc --init
   ],
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },
@@ -72,18 +72,18 @@ npx tsc --init
     "authentication"
   ],
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.0.0",
-    "@nestjs/core": "^10.0.0",
-    "reflect-metadata": "^0.1.13",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.0.0",
+    "reflect-metadata": "^0.2.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@nestjs/testing": "^10.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@types/jest": "^29.0.0",
-    "@types/node": "^20.0.0",
-    "jest": "^29.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.0.0",
+    "jest": "^30.0.0",
+    "typescript": "^6.0.0"
   }
 }
 ```
@@ -131,7 +131,7 @@ export * from './utils';
 ### Installation
 
 ```bash
-npm install @your-org/nestjs-boilerplate-core
+pnpm add @your-org/nestjs-boilerplate-core
 ```
 
 ### Basic Usage
@@ -207,31 +207,31 @@ export class UsersController {
 cd nestjs-boilerplate-core
 
 # 2. Update version
-npm version patch  # or minor/major
+pnpm version patch  # or minor/major
 
 # 3. Build and test
-npm run build
-npm test
+pnpm run build
+pnpm test
 
 # 4. Publish
-npm publish
+pnpm publish
 
 # 5. Update boilerplate template
 cd ../nestjs-boilerplate
-npm install @your-org/nestjs-boilerplate-core@latest
+pnpm add @your-org/nestjs-boilerplate-core@latest
 ```
 
 ### For Project Users
 
 ```bash
 # Check for updates
-npm outdated @your-org/nestjs-boilerplate-core
+pnpm outdated @your-org/nestjs-boilerplate-core
 
 # Update to latest
-npm update @your-org/nestjs-boilerplate-core
+pnpm update @your-org/nestjs-boilerplate-core
 
 # Or specific version
-npm install @your-org/nestjs-boilerplate-core@^2.0.0
+pnpm add @your-org/nestjs-boilerplate-core@^2.0.0
 ```
 
 ## 📊 Versioning Strategy
@@ -301,7 +301,7 @@ const config = {
 
 ### Migration Steps
 
-1. Update package: `npm install @your-org/nestjs-boilerplate-core@^2.0.0`
+1. Update package: `pnpm add @your-org/nestjs-boilerplate-core@^2.0.0`
 2. Update configuration structure in your `.env` files
 3. Update any direct usage of database config
 4. Test your application
@@ -382,7 +382,7 @@ Core utilities and modules for NestJS boilerplate projects.
 ## Installation
 
 ```bash
-npm install @your-org/nestjs-boilerplate-core
+pnpm add @your-org/nestjs-boilerplate-core
 ```
 
 ## Quick Start
@@ -445,16 +445,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Run tests
-        run: npm test
+        run: pnpm test
       
       - name: Build package
-        run: npm run build
+        run: pnpm run build
       
       - name: Publish to NPM
-        run: npm publish
+        run: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
@@ -466,7 +466,7 @@ jobs:
 git checkout -b release/v2.1.0
 
 # 2. Update version and changelog
-npm version minor
+pnpm version minor
 # Edit CHANGELOG.md
 
 # 3. Commit and push
@@ -487,7 +487,7 @@ git push origin v2.1.0
 
 ### ✅ Advantages
 
-1. **Easy Updates**: `npm update` for latest versions
+1. **Easy Updates**: `pnpm update` for latest versions
 2. **Semantic Versioning**: Clear versioning strategy
 3. **Dependency Management**: Automatic dependency resolution
 4. **Testing**: Isolated testing of utilities

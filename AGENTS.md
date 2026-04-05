@@ -12,7 +12,7 @@ This is a production-ready NestJS boilerplate using Fastify as the HTTP adapter.
 - **Cache**: Valkey/Redis (optional, falls back to in-memory)
 - **Authentication**: JWT with Passport
 - **Error Tracking**: Sentry (optional)
-- **Logging**: Winston with structured JSON logs
+- **Logging**: Pino with structured JSON logs and automatic secret redaction
 
 ## Development Commands
 
@@ -42,7 +42,7 @@ src/
 ├── config/               # Configuration management with validation
 ├── database/             # MikroORM setup, entities, migrations
 ├── health/               # Health check endpoints
-├── logger/               # Winston logging with decorators
+├── logger/               # Pino logging with decorators
 ├── sentry/               # Sentry error tracking integration
 └── migrations/           # Database migration files
 ```
