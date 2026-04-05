@@ -21,7 +21,7 @@ This guide covers different ways to use this high-performance NestJS boilerplate
 
 3. **Run setup**:
    ```bash
-   npm run setup:new-project
+   pnpm run setup:new-project
    ```
 
 ### Option 2: Clone and Setup
@@ -32,17 +32,17 @@ git clone https://github.com/your-org/nestjs-boilerplate.git my-new-project
 cd my-new-project
 
 # Run interactive setup
-npm run setup:new-project
+pnpm run setup:new-project
 
 # Install dependencies
-npm install
+pnpm install
 
 # Set up environment
 cp .env.example .env
 # Edit .env with your configuration
 
 # Start development
-npm run start:dev
+pnpm run start:dev
 ```
 
 ## 📋 Manual Setup Steps
@@ -86,11 +86,12 @@ APP_PORT=3000
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=password
+DATABASE_PASSWORD=<your-secure-password>
 DATABASE_NAME=your_database_name
 
-# Authentication
-JWT_SECRET=your-super-secret-key
+# Authentication (required — no fallback defaults)
+JWT_SECRET=<your-jwt-secret>
+JWT_REFRESH_SECRET=<your-refresh-secret>
 
 # Optional services
 SENTRY_DSN=your-sentry-dsn
@@ -104,33 +105,39 @@ REDIS_HOST=localhost
 createdb your_database_name
 
 # Run migrations (after implementing task 3)
-npm run db:migration:up
+pnpm run db:migration:up
 
 # Optional: Seed data
-npm run db:seed
+pnpm run db:seed
 ```
 
 ### 4. Development
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run start:dev
+pnpm run start:dev
 
 # Run tests
-npm run test
+pnpm run test
 
 # Build for production
-npm run build
+pnpm run build
 ```
 
 ## 🐳 Docker Development
 
 ### Quick Start with Docker Compose
 
+Docker Compose requires `POSTGRES_PASSWORD` and `REDIS_PASSWORD` environment variables (no defaults):
+
 ```bash
+# Set required passwords
+export POSTGRES_PASSWORD=<your-password>
+export REDIS_PASSWORD=<your-password>
+
 # Start all services (app, database, redis)
 docker-compose up
 
@@ -190,34 +197,34 @@ docker run -p 3000:3000 \
 
 3. **Create migration**:
    ```bash
-   npm run db:migration:create
-   npm run db:migration:up
+   pnpm run db:migration:create
+   pnpm run db:migration:up
    ```
 
 ### Testing
 
 ```bash
 # Unit tests
-npm run test
+pnpm run test
 
 # Watch mode
-npm run test:watch
+pnpm run test:watch
 
 # Coverage
-npm run test:cov
+pnpm run test:cov
 
 # E2E tests
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ### Code Quality
 
 ```bash
 # Lint code
-npm run lint
+pnpm run lint
 
 # Format code
-npm run format
+pnpm run format
 
 # Pre-commit hooks (automatically runs on commit)
 # - Linting
@@ -233,7 +240,7 @@ The boilerplate includes these ready-to-use modules:
 - **Configuration**: Environment-based config management
 - **Database**: PostgreSQL with MikroORM
 - **Authentication**: JWT-based auth system
-- **Logging**: Structured logging with Winston
+- **Logging**: Structured logging with Pino (automatic secret redaction)
 - **Caching**: Redis and in-memory caching with Fastify integration
 - **Health Checks**: Database and system monitoring
 - **Error Tracking**: Official Sentry NestJS integration
@@ -254,10 +261,10 @@ The boilerplate includes these ready-to-use modules:
 After setup, these endpoints are available:
 
 ### Public Endpoints
-- `GET /api/v1/` - Application info
-- `GET /api/v1/ping` - Health ping
-- `GET /api/v1/health` - Health checks
-- `GET /api/docs` - Swagger documentation
+- `GET /` - Application info
+- `GET /ping` - Health ping
+- `GET /health` - Health checks
+- `GET /docs` - Swagger documentation
 
 ### Authentication Endpoints
 - `POST /api/v1/auth/register` - User registration
@@ -298,9 +305,10 @@ APP_PORT=3000
 DATABASE_HOST=prod-host
 DATABASE_PORT=5432
 DATABASE_USERNAME=prod_user
-DATABASE_PASSWORD=super-secure-db-password
+DATABASE_PASSWORD=<super-secure-db-password>
 DATABASE_NAME=prod_db
-JWT_SECRET=super-secure-production-secret
+JWT_SECRET=<super-secure-production-secret>
+JWT_REFRESH_SECRET=<super-secure-refresh-secret>
 SENTRY_DSN=your-production-sentry-dsn
 REDIS_HOST=prod-redis-host
 ```
@@ -341,15 +349,15 @@ psql -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USERNAME -d $DATABASE_NAME
 **Module not found errors**:
 ```bash
 # Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 **Migration errors**:
 ```bash
 # Reset migrations (development only)
-npm run db:migration:down
-npm run db:migration:up
+pnpm run db:migration:down
+pnpm run db:migration:up
 ```
 
 ### Getting Help

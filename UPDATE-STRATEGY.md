@@ -44,7 +44,7 @@ src/
 └── index.ts         # Main exports
 
 # In consuming projects
-npm install @your-org/nestjs-boilerplate-core
+pnpm add @your-org/nestjs-boilerplate-core
 ```
 
 ### Pros:
@@ -74,7 +74,7 @@ git remote add boilerplate https://github.com/your-org/nestjs-boilerplate.git
 git fetch boilerplate
 
 # Use update script to selectively merge changes
-npm run update:boilerplate
+pnpm run update:boilerplate
 ```
 
 ### Update Script Example:
@@ -243,8 +243,8 @@ nestjs-boilerplate/
 └── docker/
 
 # 3. Update workflow in projects
-npm install @your-org/nestjs-boilerplate-core@latest
-npm run update:boilerplate
+pnpm add @your-org/nestjs-boilerplate-core@latest
+pnpm run update:boilerplate
 ```
 
 ---
@@ -254,16 +254,16 @@ npm run update:boilerplate
 ### Automated Updates (Safe):
 ```bash
 # Update core utilities
-npm update @your-org/nestjs-boilerplate-core
+pnpm update @your-org/nestjs-boilerplate-core
 
 # Update CI/CD and Docker configs
-npm run update:infrastructure
+pnpm run update:infrastructure
 ```
 
 ### Manual Updates (Review Required):
 ```bash
 # Update project structure and configs
-npm run update:boilerplate
+pnpm run update:boilerplate
 
 # Review changes
 git diff
@@ -276,10 +276,10 @@ git commit -m "Update from boilerplate v2.1.0"
 ### Breaking Changes:
 ```bash
 # Check for breaking changes
-npm run check:boilerplate-compatibility
+pnpm run check:boilerplate-compatibility
 
 # Run migration script if needed
-npm run migrate:boilerplate -- --from=v2.0.0 --to=v2.1.0
+pnpm run migrate:boilerplate -- --from=v2.0.0 --to=v2.1.0
 ```
 
 ---

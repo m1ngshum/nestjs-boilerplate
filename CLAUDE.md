@@ -4,7 +4,7 @@ This file provides context for Claude Code when working on this repository.
 
 ## Project Overview
 
-Production-ready NestJS boilerplate using **Fastify** (not Express) as the HTTP adapter. Built with TypeScript strict mode, PostgreSQL via MikroORM, Valkey/Redis caching, JWT authentication, and Winston structured logging.
+Production-ready NestJS boilerplate using **Fastify** (not Express) as the HTTP adapter. Built with TypeScript strict mode, PostgreSQL via MikroORM, Valkey/Redis caching, JWT authentication, and Pino structured logging with automatic secret redaction.
 
 ## Quick Reference Commands
 
@@ -37,17 +37,17 @@ pnpm run db:seed                # Run database seeders
 
 | Component | Technology |
 |-----------|-----------|
-| Runtime | Node.js >= 18, TypeScript 5.9 (ES2021 target, strict mode) |
+| Runtime | Node.js >= 18, TypeScript 6.0 (ES2021 target, strict mode) |
 | Framework | NestJS 11.x with **Fastify 5** adapter |
-| Database | PostgreSQL with MikroORM 6.x |
+| Database | PostgreSQL with MikroORM 7.x |
 | Cache | Valkey/Redis (iovalkey) with in-memory fallback |
 | Auth | JWT (access + refresh tokens) via Passport, bcrypt password hashing |
-| Logging | Winston (structured JSON, correlation IDs) |
+| Logging | Pino (structured JSON, automatic secret redaction, correlation IDs) |
 | Error Tracking | Sentry (optional) |
 | Rate Limiting | @nestjs/throttler with custom Redis storage |
 | API Docs | Swagger/OpenAPI |
 | Testing | Jest with ts-jest, @nestjs/testing |
-| Linting | ESLint 9 (flat config) + Prettier |
+| Linting | ESLint 10 (flat config) + Prettier |
 | Package Manager | pnpm |
 
 ## Project Structure
@@ -84,7 +84,7 @@ src/
 │   ├── pagination.service.ts  # Cursor/offset pagination
 │   └── read-replica.service.ts
 ├── health/                    # Health check endpoints (/health)
-├── logger/                    # Winston LoggerService, @Log() decorator
+├── logger/                    # Pino LoggerService, @Log() decorator
 │   ├── interceptors/          # Request/response logging
 │   ├── decorators/            # @Log() method decorator
 │   └── middleware/            # Request logging middleware
@@ -202,9 +202,11 @@ Follow conventional commits:
 
 ## Docker
 
-- Multi-stage Dockerfile (Node 24 Alpine, non-root user, dumb-init)
+- Multi-stage Dockerfile (Node 24 Alpine, non-root user, dumb-init, corepack for pnpm)
 - `docker-compose.yml` provides PostgreSQL 15 and Redis 7 for local dev
-- Health check: `curl` to `/health` every 30s
+- Ports bound to `127.0.0.1` only (not exposed externally)
+- Passwords required via environment variables (`POSTGRES_PASSWORD`, `REDIS_PASSWORD` — no defaults)
+- Health check: Node.js HTTP request to `/health` every 30s (no curl dependency)
 - Production: `NODE_OPTIONS="--max-old-space-size=512"`
 
 ## Important Caveats
@@ -212,5 +214,6 @@ Follow conventional commits:
 - This uses **Fastify**, not Express — middleware, plugins, and request/response objects differ from Express
 - The `ConfigurationService` wraps `@nestjs/config` with typed accessors and feature flags (`isFeatureEnabled()`)
 - Cache falls back to in-memory automatically when Redis/Valkey is unavailable
-- Sensitive fields (password, token, authorization) are automatically redacted in request logs
+- Sensitive fields (password, token, secret, apiKey, authorization, cookie) are automatically redacted in Pino logs via redact paths
+- All secrets (DATABASE_PASSWORD, JWT_SECRET, JWT_REFRESH_SECRET) must be provided via environment variables — there are no fallback defaults
 - The global exception filter catches all unhandled errors and formats consistent JSON responses

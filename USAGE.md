@@ -20,7 +20,7 @@ There are several ways to use this high-performance NestJS boilerplate with Fast
    ```
 5. Run the setup script:
    ```bash
-   npm run setup:new-project
+   pnpm run setup:new-project
    ```
 6. Follow the prompts to customize your project
 
@@ -35,7 +35,7 @@ There are several ways to use this high-performance NestJS boilerplate with Fast
 
 2. Run the setup script:
    ```bash
-   npm run setup:new-project
+   pnpm run setup:new-project
    ```
 
 3. The script will:
@@ -50,7 +50,7 @@ There are several ways to use this high-performance NestJS boilerplate with Fast
 ```bash
 npx create-nestjs-boilerplate my-new-project
 cd my-new-project
-npm run start:dev
+pnpm run start:dev
 ```
 
 ## Method 4: Manual Setup
@@ -85,17 +85,17 @@ After using any method above:
    createdb your_database_name
    
    # Run migrations
-   npm run db:migration:up
+   pnpm run db:migration:up
    ```
 
 3. **Install Dependencies**:
    ```bash
-   npm install
+   pnpm install
    ```
 
 4. **Start Development**:
    ```bash
-   npm run start:dev
+   pnpm run start:dev
    ```
 
 ## Customization Options
@@ -199,15 +199,15 @@ pg_isready
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=password
+DATABASE_PASSWORD=<your-secure-password>
 DATABASE_NAME=your_database_name
 ```
 
 **Missing dependencies**:
 ```bash
 # Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 ### Getting Help
