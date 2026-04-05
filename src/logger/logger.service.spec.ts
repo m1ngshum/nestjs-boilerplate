@@ -2,39 +2,31 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigurationService } from '../config/configuration.service';
 import { ClsService } from 'nestjs-cls';
 import { LoggerService } from './logger.service';
-import * as winston from 'winston';
 
-// Mock winston
-jest.mock('winston', () => ({
-  createLogger: jest.fn().mockReturnValue({
-    log: jest.fn(),
+// Mock pino — must use `var` to avoid TDZ with jest.mock hoisting
+
+var mockPinoLogger: Record<string, jest.Mock>;
+
+jest.mock('pino', () => {
+  mockPinoLogger = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
-    verbose: jest.fn(),
-    on: jest.fn(),
-    end: jest.fn(),
-  }),
-  format: {
-    timestamp: jest.fn(),
-    errors: jest.fn(),
-    json: jest.fn(),
-    colorize: jest.fn(),
-    printf: jest.fn(),
-    combine: jest.fn(),
-  },
-  transports: {
-    Console: jest.fn(),
-    File: jest.fn(),
-  },
-}));
+    trace: jest.fn(),
+    fatal: jest.fn(),
+    child: jest.fn(),
+    flush: jest.fn(),
+  };
+
+  const factory = jest.fn().mockReturnValue(mockPinoLogger);
+  (factory as any).stdTimeFunctions = { isoTime: jest.fn() };
+  (factory as any).transport = jest.fn();
+  return { __esModule: true, default: factory };
+});
 
 describe('LoggerService', () => {
   let service: LoggerService;
-  let configService: ConfigurationService;
-  let clsService: ClsService;
-  let mockWinstonLogger: any;
 
   const mockConfigService = {
     log: {
@@ -51,21 +43,13 @@ describe('LoggerService', () => {
 
   const mockClsService = {
     getId: jest.fn(),
+    get: jest.fn(),
   };
 
   beforeEach(async () => {
-    mockWinstonLogger = {
-      log: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-      verbose: jest.fn(),
-      on: jest.fn(),
-      end: jest.fn(),
-    };
-
-    (winston.createLogger as jest.Mock).mockReturnValue(mockWinstonLogger);
+    // Reset the mock logger methods
+    Object.values(mockPinoLogger).forEach((fn) => (fn as jest.Mock).mockReset());
+    mockPinoLogger.child.mockReturnValue(mockPinoLogger);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -81,12 +65,11 @@ describe('LoggerService', () => {
       ],
     }).compile();
 
-    service = module.get<LoggerService>(LoggerService);
-    configService = module.get<ConfigurationService>(ConfigurationService);
-    clsService = module.get<ClsService>(ClsService);
+    service = await module.resolve<LoggerService>(LoggerService);
 
-    // Reset mocks
+    // Reset mocks after service construction so we only capture test calls
     jest.clearAllMocks();
+    mockPinoLogger.child.mockReturnValue(mockPinoLogger);
   });
 
   it('should be defined', () => {
@@ -106,10 +89,14 @@ describe('LoggerService', () => {
 
       service.log('Test message', 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'Test message', {
-        correlationId: 'correlation-123',
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        {
+          correlationId: 'correlation-123',
+          requestId: 'correlation-123',
+          context: 'TestContext',
+        },
+        'Test message',
+      );
     });
 
     it('should log info message with metadata', () => {
@@ -117,21 +104,27 @@ describe('LoggerService', () => {
 
       service.log('Test message', meta, 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'Test message', {
-        userId: '123',
-        action: 'test',
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: '123',
+          action: 'test',
+          context: 'TestContext',
+        }),
+        'Test message',
+      );
     });
 
     it('should handle CLS errors gracefully', () => {
       mockClsService.getId.mockImplementation(() => {
         throw new Error('CLS not available');
       });
+      mockClsService.get.mockImplementation(() => {
+        throw new Error('CLS not available');
+      });
 
       service.log('Test message');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'Test message', {});
+      expect(mockPinoLogger.info).toHaveBeenCalledWith({}, 'Test message');
     });
   });
 
@@ -142,23 +135,29 @@ describe('LoggerService', () => {
 
       service.error('Error occurred', error, 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('error', 'Error occurred', {
-        error: {
-          name: 'Error',
-          message: 'Test error',
-          stack: 'Error stack trace',
+      expect(mockPinoLogger.error).toHaveBeenCalledWith(
+        {
+          error: {
+            name: 'Error',
+            message: 'Test error',
+            stack: 'Error stack trace',
+          },
+          context: 'TestContext',
         },
-        context: 'TestContext',
-      });
+        'Error occurred',
+      );
     });
 
     it('should log error with trace string', () => {
       service.error('Error occurred', 'Stack trace', 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('error', 'Error occurred', {
-        trace: 'Stack trace',
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.error).toHaveBeenCalledWith(
+        {
+          trace: 'Stack trace',
+          context: 'TestContext',
+        },
+        'Error occurred',
+      );
     });
 
     it('should log error with metadata object', () => {
@@ -166,11 +165,14 @@ describe('LoggerService', () => {
 
       service.error('Error occurred', meta, 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('error', 'Error occurred', {
-        userId: '123',
-        operation: 'test',
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.error).toHaveBeenCalledWith(
+        {
+          userId: '123',
+          operation: 'test',
+          context: 'TestContext',
+        },
+        'Error occurred',
+      );
     });
   });
 
@@ -178,9 +180,12 @@ describe('LoggerService', () => {
     it('should log warning message', () => {
       service.warn('Warning message', 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('warn', 'Warning message', {
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.warn).toHaveBeenCalledWith(
+        {
+          context: 'TestContext',
+        },
+        'Warning message',
+      );
     });
   });
 
@@ -188,9 +193,25 @@ describe('LoggerService', () => {
     it('should log debug message', () => {
       service.debug('Debug message', 'TestContext');
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('debug', 'Debug message', {
-        context: 'TestContext',
-      });
+      expect(mockPinoLogger.debug).toHaveBeenCalledWith(
+        {
+          context: 'TestContext',
+        },
+        'Debug message',
+      );
+    });
+  });
+
+  describe('verbose', () => {
+    it('should map verbose to pino trace level', () => {
+      service.verbose('Verbose message', 'TestContext');
+
+      expect(mockPinoLogger.trace).toHaveBeenCalledWith(
+        {
+          context: 'TestContext',
+        },
+        'Verbose message',
+      );
     });
   });
 
@@ -201,7 +222,6 @@ describe('LoggerService', () => {
         url: '/api/test',
         headers: { 'user-agent': 'test-agent' },
         ip: '127.0.0.1',
-        user: { id: 'user-123' },
       };
 
       const res = {
@@ -210,15 +230,17 @@ describe('LoggerService', () => {
 
       service.logRequest(req, res, 150);
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'GET /api/test 200 - 150ms', {
-        method: 'GET',
-        url: '/api/test',
-        statusCode: 200,
-        responseTime: 150,
-        userAgent: 'test-agent',
-        ip: '127.0.0.1',
-        userId: 'user-123',
-      });
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'GET',
+          url: '/api/test',
+          statusCode: 200,
+          responseTime: 150,
+          userAgent: 'test-agent',
+          ip: '127.0.0.1',
+        }),
+        'GET /api/test 200 - 150ms',
+      );
     });
 
     it('should log error status as warning', () => {
@@ -226,6 +248,7 @@ describe('LoggerService', () => {
         method: 'POST',
         url: '/api/test',
         headers: {},
+        connection: { remoteAddress: '127.0.0.1' },
       };
 
       const res = {
@@ -234,10 +257,9 @@ describe('LoggerService', () => {
 
       service.logRequest(req, res, 100);
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith(
-        'warn',
-        'POST /api/test 400 - 100ms',
+      expect(mockPinoLogger.warn).toHaveBeenCalledWith(
         expect.any(Object),
+        'POST /api/test 400 - 100ms',
       );
     });
   });
@@ -248,11 +270,14 @@ describe('LoggerService', () => {
 
       service.logQuery('SELECT * FROM users', ['param1'], 50);
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('debug', 'Database Query', {
-        query: 'SELECT * FROM users',
-        params: ['param1'],
-        duration: '50ms',
-      });
+      expect(mockPinoLogger.debug).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: 'SELECT * FROM users',
+          params: ['param1'],
+          duration: '50ms',
+        }),
+        'Database Query',
+      );
     });
 
     it('should not log query in production', () => {
@@ -260,7 +285,7 @@ describe('LoggerService', () => {
 
       service.logQuery('SELECT * FROM users');
 
-      expect(mockWinstonLogger.log).not.toHaveBeenCalled();
+      expect(mockPinoLogger.debug).not.toHaveBeenCalled();
     });
   });
 
@@ -268,11 +293,14 @@ describe('LoggerService', () => {
     it('should log performance metrics', () => {
       service.logPerformance('Database Query', 1500, { table: 'users' });
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'Performance: Database Query', {
-        operation: 'Database Query',
-        duration: '1500ms',
-        table: 'users',
-      });
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operation: 'Database Query',
+          duration: '1500ms',
+          table: 'users',
+        }),
+        'Performance: Database Query',
+      );
     });
   });
 
@@ -282,12 +310,15 @@ describe('LoggerService', () => {
 
       service.logSecurity('Failed login attempt', meta);
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('warn', 'Security: Failed login attempt', {
-        event: 'Failed login attempt',
-        userId: '123',
-        ip: '127.0.0.1',
-        timestamp: expect.any(String),
-      });
+      expect(mockPinoLogger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'Failed login attempt',
+          userId: '123',
+          ip: '127.0.0.1',
+          timestamp: expect.any(String),
+        }),
+        'Security: Failed login attempt',
+      );
     });
   });
 
@@ -297,12 +328,15 @@ describe('LoggerService', () => {
 
       service.logBusiness('Order created', meta);
 
-      expect(mockWinstonLogger.log).toHaveBeenCalledWith('info', 'Business: Order created', {
-        event: 'Order created',
-        userId: '123',
-        amount: 100,
-        timestamp: expect.any(String),
-      });
+      expect(mockPinoLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'Order created',
+          userId: '123',
+          amount: 100,
+          timestamp: expect.any(String),
+        }),
+        'Business: Order created',
+      );
     });
   });
 
@@ -312,23 +346,26 @@ describe('LoggerService', () => {
 
       const childLogger = service.child(additionalContext);
 
+      expect(mockPinoLogger.child).toHaveBeenCalledWith(additionalContext);
       expect(childLogger).toBeInstanceOf(LoggerService);
-      expect(childLogger['context']).toBe(service['context']);
+    });
+
+    it('should preserve parent context in child logger', () => {
+      service.setContext('ParentContext');
+      const childLogger = service.child({ userId: '123' });
+
+      expect(childLogger['context']).toBe('ParentContext');
     });
   });
 
   describe('flush', () => {
-    it('should flush winston logger', async () => {
-      const flushPromise = service.flush();
+    it('should flush pino logger', async () => {
+      // Mock flush to invoke the callback immediately
+      mockPinoLogger.flush.mockImplementation((cb: (err?: Error) => void) => cb());
 
-      // Simulate winston finish event
-      const finishCallback = mockWinstonLogger.on.mock.calls.find(
-        (call) => call[0] === 'finish',
-      )[1];
-      finishCallback();
+      await service.flush();
 
-      await expect(flushPromise).resolves.toBeUndefined();
-      expect(mockWinstonLogger.end).toHaveBeenCalled();
+      expect(mockPinoLogger.flush).toHaveBeenCalled();
     });
   });
 });
