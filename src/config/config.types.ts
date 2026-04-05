@@ -125,7 +125,7 @@ export const OPTIONAL_ENV_VARS = {
   DATABASE_HOST: 'localhost',
   DATABASE_PORT: '5432',
   DATABASE_USERNAME: 'postgres',
-  DATABASE_PASSWORD: 'password',
+  DATABASE_PASSWORD: undefined,
   DATABASE_NAME: 'nestjs_boilerplate',
   CACHE_TTL: '300',
   THROTTLE_TTL: '60',

@@ -185,13 +185,13 @@ export default registerAs('config', (): AppConfiguration => {
       host: process.env.DATABASE_HOST || 'localhost',
       port: parseInt(process.env.DATABASE_PORT || '5432', 10),
       username: process.env.DATABASE_USERNAME || 'postgres',
-      password:
-        process.env.DATABASE_PASSWORD ||
-        (nodeEnv === 'production'
-          ? (() => {
-              throw new Error('DATABASE_PASSWORD is required in production');
-            })()
-          : 'password'),
+      password: (() => {
+        const pw = process.env.DATABASE_PASSWORD;
+        if (!pw) {
+          throw new Error('DATABASE_PASSWORD must be set via environment variable');
+        }
+        return pw;
+      })(),
       database: process.env.DATABASE_NAME || 'nestjs_boilerplate',
       synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
       logging: process.env.DATABASE_LOGGING === 'true' || nodeEnv === 'development',
@@ -226,21 +226,21 @@ export default registerAs('config', (): AppConfiguration => {
     },
 
     auth: {
-      jwtSecret:
-        process.env.JWT_SECRET ||
-        (nodeEnv === 'production'
-          ? (() => {
-              throw new Error('JWT_SECRET is required in production');
-            })()
-          : 'your-super-secret-jwt-key'),
+      jwtSecret: (() => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error('JWT_SECRET must be set via environment variable');
+        }
+        return secret;
+      })(),
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-      jwtRefreshSecret:
-        process.env.JWT_REFRESH_SECRET ||
-        (nodeEnv === 'production'
-          ? (() => {
-              throw new Error('JWT_REFRESH_SECRET is required in production');
-            })()
-          : 'your-super-secret-refresh-key'),
+      jwtRefreshSecret: (() => {
+        const secret = process.env.JWT_REFRESH_SECRET;
+        if (!secret) {
+          throw new Error('JWT_REFRESH_SECRET must be set via environment variable');
+        }
+        return secret;
+      })(),
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
       enableGoogleAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
       googleClientId: process.env.GOOGLE_CLIENT_ID,

@@ -9,7 +9,11 @@ export function getClientIpAndUserAgent(req: FastifyRequest | Record<string, any
   let ip = req.ip;
 
   if (req.ips && req.ips.length) {
-    ip = req.ips[req.ips.length - parseInt(process.env.IP_OFFSET || '1')];
+    const offset = Math.max(
+      1,
+      Math.min(parseInt(process.env.IP_OFFSET || '1', 10) || 1, req.ips.length),
+    );
+    ip = req.ips[req.ips.length - offset];
   }
 
   try {
