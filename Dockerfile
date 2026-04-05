@@ -7,40 +7,21 @@
 FROM node:24-alpine AS base
 
 # Install security updates and required packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-    dumb-init \
-    curl \
-    && rm -rf /var/cache/apk/*
-
-# Create app directory with proper permissions
-WORKDIR /app
+RUN apk add --no-cache --upgrade \
+    dumb-init
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001 -G nodejs
 
-# ===============================================
-# Stage 2: Dependencies
-# ===============================================
-FROM base AS deps
+# Create app directory with proper permissions
+WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
-
-# Copy package files for better layer caching
-COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm@latest
-
-# Install dependencies with optimizations
-RUN pnpm config set store-dir /app/.pnpm-store && \
-    pnpm install --frozen-lockfile --prod=false && \
-    pnpm store prune
+# Enable corepack for pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # ===============================================
-# Stage 3: Builder
+# Stage 2: Builder
 # ===============================================
 FROM base AS builder
 
@@ -49,9 +30,6 @@ RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm@latest
 
 # Install all dependencies (including dev dependencies for building)
 RUN pnpm config set store-dir /app/.pnpm-store && \
@@ -69,19 +47,15 @@ RUN pnpm build && \
     find dist -name "*.test.js" -delete
 
 # ===============================================
-# Stage 4: Production
+# Stage 3: Production
 # ===============================================
 FROM base AS production
 
 # Set production environment
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm@latest
 
 # Install only production dependencies
 RUN pnpm config set store-dir /app/.pnpm-store && \
@@ -103,9 +77,9 @@ USER nestjs
 # Expose port
 EXPOSE 3000
 
-# Health check with proper error handling
+# Health check using node instead of curl to reduce attack surface
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+    CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]

@@ -1,6 +1,13 @@
-import { Injectable, LoggerService as NestLoggerService, Scope, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  LoggerService as NestLoggerService,
+  Scope,
+  HttpStatus,
+  Optional,
+  Inject,
+} from '@nestjs/common';
 import { ConfigurationService } from '../config/configuration.service';
-import * as winston from 'winston';
+import pino from 'pino';
 import { ClsService } from 'nestjs-cls';
 
 export interface LogContext {
@@ -20,16 +27,24 @@ export interface LogContext {
   [key: string]: any;
 }
 
+/** Map Winston levels to Pino levels */
+const LEVEL_MAP: Record<string, string> = {
+  verbose: 'trace',
+};
+
+const VALID_PINO_LEVELS = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace']);
+
 @Injectable({ scope: Scope.TRANSIENT })
 export class LoggerService implements NestLoggerService {
-  private readonly winston: winston.Logger;
+  private readonly pinoLogger: pino.Logger;
   private context?: string;
 
   constructor(
     private readonly configService: ConfigurationService,
     private readonly cls: ClsService,
+    @Optional() @Inject('PINO_INSTANCE') existingPino?: pino.Logger,
   ) {
-    this.winston = this.createWinstonLogger();
+    this.pinoLogger = existingPino ?? this.createPinoLogger();
   }
 
   /**
@@ -40,64 +55,68 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * Create Winston logger instance
+   * Create Pino logger instance
    */
-  private createWinstonLogger(): winston.Logger {
+  private createPinoLogger(): pino.Logger {
     const logConfig = this.configService.log;
     const appConfig = this.configService.app;
 
-    const formats: winston.Logform.Format[] = [
-      winston.format.timestamp(),
-      winston.format.errors({ stack: true }),
-    ];
+    const pinoLevel = LEVEL_MAP[logConfig.level] ?? logConfig.level;
+    const useJsonFormat = logConfig.format === 'json' || appConfig.isProduction;
 
-    // Add JSON formatting for production, pretty print for development
-    if (logConfig.format === 'json' || appConfig.isProduction) {
-      formats.push(winston.format.json());
-    } else {
-      formats.push(
-        winston.format.colorize(),
-        winston.format.printf(({ timestamp, level, message, context, ...meta }) => {
-          const ctx = context ? `[${context}] ` : '';
-          const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
-          return `${timestamp} ${level}: ${ctx}${message}${metaStr}`;
+    const baseOptions: pino.LoggerOptions = {
+      level: pinoLevel,
+      base: {
+        service: appConfig.name,
+        environment: appConfig.environment,
+      },
+      redact: {
+        paths: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.headers["x-api-key"]',
+          '*.password',
+          '*.token',
+          '*.secret',
+          '*.apiKey',
+          '*.secretKey',
+        ],
+        censor: '[REDACTED]',
+      },
+      timestamp: pino.stdTimeFunctions.isoTime,
+    };
+
+    if (appConfig.isProduction) {
+      return pino(
+        baseOptions,
+        pino.transport({
+          targets: [
+            { target: 'pino/file', options: { destination: 1 } }, // stdout
+            {
+              target: 'pino-roll',
+              options: { file: './logs/combined.log', size: '5m', limit: { count: 5 } },
+            },
+            {
+              target: 'pino-roll',
+              level: 'error',
+              options: { file: './logs/error.log', size: '5m', limit: { count: 5 } },
+            },
+          ],
         }),
       );
     }
 
-    return winston.createLogger({
-      level: logConfig.level,
-      format: winston.format.combine(...formats),
-      defaultMeta: {
-        service: appConfig.name,
-        environment: appConfig.environment,
-      },
-      transports: [
-        new winston.transports.Console({
-          handleExceptions: true,
-          handleRejections: true,
+    if (!useJsonFormat) {
+      return pino(
+        baseOptions,
+        pino.transport({
+          target: 'pino-pretty',
+          options: { colorize: true, translateTime: true, ignore: 'pid,hostname' },
         }),
-        // Add file transport for production
-        ...(appConfig.isProduction
-          ? [
-              new winston.transports.File({
-                filename: './logs/error.log',
-                level: 'error',
-                handleExceptions: true,
-                maxsize: 5242880, // 5MB
-                maxFiles: 5,
-              }),
-              new winston.transports.File({
-                filename: './logs/combined.log',
-                handleExceptions: true,
-                maxsize: 5242880, // 5MB
-                maxFiles: 5,
-              }),
-            ]
-          : []),
-      ],
-      exitOnError: false,
-    });
+      );
+    }
+
+    return pino(baseOptions);
   }
 
   /**
@@ -126,7 +145,7 @@ export class LoggerService implements NestLoggerService {
         context.requestId = requestId;
         context.correlationId = requestId; // Keep correlationId for backward compatibility
       }
-    } catch (error) {
+    } catch {
       // CLS might not be available in all contexts
     }
 
@@ -139,16 +158,28 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * Enhanced logging method
+   * Enhanced logging method — Pino uses (object, message) argument order
    */
   private logWithContext(level: string, message: string, meta: any = {}, context?: string): void {
+    const pinoLevel = LEVEL_MAP[level] ?? level;
     const enhancedContext = this.getEnhancedContext();
 
-    this.winston.log(level, message, {
+    const mergedMeta = {
       ...enhancedContext,
       ...meta,
       ...(context && { context }),
-    });
+    };
+
+    if (!VALID_PINO_LEVELS.has(pinoLevel)) {
+      this.pinoLogger.warn(
+        { requestedLevel: pinoLevel },
+        `Unknown log level "${pinoLevel}", falling back to info`,
+      );
+      this.pinoLogger.info(mergedMeta, message);
+      return;
+    }
+
+    this.pinoLogger[pinoLevel as pino.Level](mergedMeta, message);
   }
 
   /**
@@ -217,7 +248,7 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * Log a verbose message
+   * Log a verbose message (maps to Pino's trace level)
    */
   verbose(message: string, context?: string): void;
   verbose(message: string, meta?: any, context?: string): void;
@@ -298,26 +329,18 @@ export class LoggerService implements NestLoggerService {
    * Create child logger with additional context
    */
   child(additionalContext: Record<string, any>): LoggerService {
-    const childLogger = new LoggerService(this.configService, this.cls);
+    const childPino = this.pinoLogger.child(additionalContext);
+    const childLogger = new LoggerService(this.configService, this.cls, childPino);
     childLogger.context = this.context;
-
-    // Override the getEnhancedContext method to include additional context
-    const originalGetEnhancedContext = childLogger.getEnhancedContext.bind(childLogger);
-    childLogger.getEnhancedContext = () => ({
-      ...originalGetEnhancedContext(),
-      ...additionalContext,
-    });
-
     return childLogger;
   }
 
   /**
-   * Flush logs (useful for testing)
+   * Flush logs (wraps Pino's callback-based flush for async/await)
    */
   async flush(): Promise<void> {
-    return new Promise((resolve) => {
-      this.winston.on('finish', resolve);
-      this.winston.end();
+    return new Promise<void>((resolve, reject) => {
+      this.pinoLogger.flush((err) => (err ? reject(err) : resolve()));
     });
   }
 }
