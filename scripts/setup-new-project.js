@@ -124,10 +124,6 @@ function updateEnvExample(projectName, databaseName, enabledFeatures) {
     envContent = envContent.replace(/# Redis Configuration[\s\S]*?(?=\n# |\n$)/g, '');
   }
 
-  if (!enabledFeatures.googleAuth) {
-    envContent = envContent.replace(/# Optional: Google OAuth[\s\S]*?(?=\n# |\n$)/g, '');
-  }
-
   fs.writeFileSync(envPath, envContent);
   console.log('✅ Updated .env.example');
 }
@@ -224,12 +220,10 @@ async function main() {
     console.log('\n📦 Optional features (y/n):');
     const enableSentry = (await question('Enable Sentry error tracking? (y/n): ')).toLowerCase() === 'y';
     const enableRedis = (await question('Enable Redis caching? (y/n): ')).toLowerCase() === 'y';
-    const enableGoogleAuth = (await question('Enable Google OAuth? (y/n): ')).toLowerCase() === 'y';
 
     const enabledFeatures = {
       sentry: enableSentry,
       redis: enableRedis,
-      googleAuth: enableGoogleAuth,
     };
 
     console.log('\n🔧 Setting up project...');
@@ -265,10 +259,6 @@ async function main() {
 
     if (enabledFeatures.redis) {
       console.log('🗄️  Redis configuration available in .env');
-    }
-
-    if (enabledFeatures.googleAuth) {
-      console.log('🔐 Google OAuth configuration available in .env');
     }
 
   } catch (error) {

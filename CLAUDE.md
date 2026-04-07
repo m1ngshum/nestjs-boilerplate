@@ -161,7 +161,6 @@ this.logger.error('Operation failed', error);
 **Optional features (enabled by setting the variable):**
 - `REDIS_HOST` / `VALKEY_CLUSTER_HOST` — enables Redis/Valkey caching
 - `SENTRY_DSN` — enables Sentry error tracking
-- `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` — enables Google OAuth
 
 See `.env.example` for the complete reference of all environment variables.
 
