@@ -28,9 +28,6 @@ export interface AuthConfig {
   jwtExpiresIn: string;
   jwtRefreshSecret: string;
   jwtRefreshExpiresIn: string;
-  enableGoogleAuth: boolean;
-  googleClientId?: string;
-  googleClientSecret?: string;
 }
 
 export interface CacheConfig {
@@ -242,9 +239,6 @@ export default registerAs('config', (): AppConfiguration => {
         return secret;
       })(),
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
-      enableGoogleAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-      googleClientId: process.env.GOOGLE_CLIENT_ID,
-      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
 
     cache: {

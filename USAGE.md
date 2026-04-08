@@ -110,7 +110,6 @@ The setup script will prompt you for:
   - Sentry error tracking (official NestJS integration)
   - Redis caching (with Fastify integration)
   - Advanced rate limiting (route-specific with Redis)
-  - Google OAuth
   - Analytics tracking
 
 ## Updating from Boilerplate
