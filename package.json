@@ -26,7 +26,6 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "lint:strict": "eslint \"src/**/*.ts\" --max-warnings 0",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -36,9 +35,6 @@
     "db:migration:up": "npx mikro-orm migration:up",
     "db:migration:down": "npx mikro-orm migration:down",
     "db:seed": "npx mikro-orm seeder:run",
-    "setup:new-project": "node scripts/setup-new-project.js",
-    "update:boilerplate": "node scripts/update-boilerplate.js",
-    "check:boilerplate": "node scripts/check-boilerplate-version.js",
     "prepare": "husky"
   },
   "dependencies": {
@@ -111,7 +107,6 @@
     "husky": "^9.1.7",
     "jest": "^30.3.0",
     "lint-staged": "^16.4.0",
-    "madge": "^8.0.0",
     "prettier": "^3.8.1",
     "source-map-support": "^0.5.21",
     "supertest": "^7.2.2",
@@ -161,7 +156,7 @@
     }
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   },
   "lint-staged": {
     "*.{ts,js}": [

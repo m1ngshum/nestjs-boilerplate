@@ -5,7 +5,7 @@ import { LoggerService } from '../../logger/logger.service';
 import { getTraceContext } from './trace.middleware';
 import { createOutgoingHeaders, TraceContext, generateSpanId } from './trace-context';
 
-// Use global fetch (available in Node.js 18+)
+// Use global fetch (available in Node.js 24+)
 declare const fetch: typeof globalThis.fetch;
 
 export interface HttpRequestOptions {

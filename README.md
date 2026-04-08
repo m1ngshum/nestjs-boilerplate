@@ -23,7 +23,7 @@ A comprehensive, production-ready NestJS boilerplate with authentication, loggin
 
 ### Prerequisites
 
-- Node.js (>= 18.0.0)
+- Node.js (>= 24.0.0)
 - PostgreSQL
 - Redis (optional, recommended for production)
 
