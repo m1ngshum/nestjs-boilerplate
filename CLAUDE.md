@@ -37,7 +37,7 @@ pnpm run db:seed                # Run database seeders
 
 | Component | Technology |
 |-----------|-----------|
-| Runtime | Node.js >= 18, TypeScript 6.0 (ES2021 target, strict mode) |
+| Runtime | Node.js >= 24, TypeScript 6.0 (ES2021 target, strict mode) |
 | Framework | NestJS 11.x with **Fastify 5** adapter |
 | Database | PostgreSQL with MikroORM 7.x |
 | Cache | Valkey/Redis (iovalkey) with in-memory fallback |
