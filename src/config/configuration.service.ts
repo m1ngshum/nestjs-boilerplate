@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   AppConfiguration,
   AppConfig,
+  AuthConfig,
   DatabaseConfig,
   CacheConfig,
   ValkeyConfig,
@@ -22,6 +23,15 @@ export class ConfigurationService {
 
   get app(): AppConfig {
     return this.configService.get<AppConfig>('config.app', { infer: true })!;
+  }
+
+  get auth(): AuthConfig | undefined {
+    return this.configService.get<AuthConfig>('config.auth', { infer: true });
+  }
+
+  isAuthEnabled(): boolean {
+    const auth = this.auth;
+    return !!(auth?.jwtSecret && auth?.jwtRefreshSecret);
   }
 
   get database(): DatabaseConfig {

@@ -166,25 +166,36 @@ async function bootstrap() {
   if (configService.swagger.enabled) {
     const swaggerConfig = configService.swagger;
 
-    const config = new DocumentBuilder()
+    const builder = new DocumentBuilder()
       .setTitle(swaggerConfig.title)
       .setDescription(swaggerConfig.description)
-      .setVersion(swaggerConfig.version)
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        'Authorization',
-      )
-      .addApiKey({ type: 'apiKey', in: 'header', name: 'x-refresh-token' }, 'x-refresh-token')
+      .setVersion(swaggerConfig.version);
+
+    if (configService.isAuthEnabled()) {
+      builder
+        .addBearerAuth(
+          {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+          'Authorization',
+        )
+        .addApiKey({ type: 'apiKey', in: 'header', name: 'x-refresh-token' }, 'x-refresh-token');
+    }
+
+    builder
       .addApiKey({ type: 'apiKey', in: 'header', name: 'x-api-key' }, 'x-api-key')
       .addTag('Application', 'Application information endpoints')
-      .addTag('Health', 'Health check endpoints')
-      .addTag('Auth', 'Authentication endpoints')
-      .addServer(`${configService.app.url}`, `${configService.app.environment} server`)
-      .build();
+      .addTag('Health', 'Health check endpoints');
+
+    if (configService.isAuthEnabled()) {
+      builder.addTag('Auth', 'Authentication endpoints');
+    }
+
+    builder.addServer(`${configService.app.url}`, `${configService.app.environment} server`);
+
+    const config = builder.build();
 
     const document = SwaggerModule.createDocument(app, config, {
       deepScanRoutes: true,

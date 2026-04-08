@@ -34,7 +34,7 @@ import { LoggerService } from '../logger/logger.service';
           debug: configService.isDevelopment(),
           logger: (message: string) => loggerService.log(message),
           migrations: {
-            path: Utils.detectTsNode() ? 'src/migrations' : 'dist/migrations',
+            path: Utils.detectTypeScriptSupport() ? 'src/migrations' : 'dist/migrations',
             safe: true,
           },
           extensions: [Migrator],

@@ -51,7 +51,7 @@ export class SoftDeleteUtils {
     const entitiesArray = Array.isArray(entities) ? entities : [entities];
 
     entitiesArray.forEach((entity) => {
-      entity.softDelete();
+      (entity as any).deletedAt = new Date();
     });
 
     await em.flush();
@@ -64,7 +64,7 @@ export class SoftDeleteUtils {
     const entitiesArray = Array.isArray(entities) ? entities : [entities];
 
     entitiesArray.forEach((entity) => {
-      entity.restore();
+      (entity as any).deletedAt = undefined;
     });
 
     await em.flush();
