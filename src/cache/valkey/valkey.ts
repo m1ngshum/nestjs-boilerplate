@@ -22,6 +22,13 @@ export const ValkeyProvider: Provider = {
         return delay;
       },
       reconnectOnError: (err: Error) => {
+        // Don't reconnect on auth errors — it will just loop forever
+        if (err.message.includes('ERR AUTH')) {
+          logger.error('Valkey AUTH failed — check REDIS_PASSWORD configuration', {
+            error: err.message,
+          });
+          return false;
+        }
         if (!err.message.includes('MOVED')) {
           logger.warn('Valkey reconnect on error', { error: err.message });
         }
@@ -43,7 +50,7 @@ export const ValkeyProvider: Provider = {
           dnsLookup: (address, callback) => callback(null, address),
           redisOptions: {
             showFriendlyErrorStack: true,
-            password: cacheConfig.password,
+            ...(cacheConfig.password ? { password: cacheConfig.password } : {}),
             ...baseOptions,
           },
         },
@@ -62,7 +69,7 @@ export const ValkeyProvider: Provider = {
       client = new Redis({
         port: cacheConfig.port || 6379,
         host: cacheConfig.host || 'localhost',
-        password: cacheConfig.password,
+        ...(cacheConfig.password ? { password: cacheConfig.password } : {}),
         db: cacheConfig.db || 0,
         ...baseOptions,
       });
