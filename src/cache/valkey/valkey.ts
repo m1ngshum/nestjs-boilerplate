@@ -22,6 +22,13 @@ export const ValkeyProvider: Provider = {
         return delay;
       },
       reconnectOnError: (err: Error) => {
+        // Don't reconnect on auth errors — it will just loop forever
+        if (err.message.includes('ERR AUTH')) {
+          logger.error('Valkey AUTH failed — check REDIS_PASSWORD configuration', {
+            error: err.message,
+          });
+          return false;
+        }
         if (!err.message.includes('MOVED')) {
           logger.warn('Valkey reconnect on error', { error: err.message });
         }
