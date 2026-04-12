@@ -43,7 +43,7 @@ export const ValkeyProvider: Provider = {
           dnsLookup: (address, callback) => callback(null, address),
           redisOptions: {
             showFriendlyErrorStack: true,
-            password: cacheConfig.password,
+            ...(cacheConfig.password ? { password: cacheConfig.password } : {}),
             ...baseOptions,
           },
         },
@@ -62,7 +62,7 @@ export const ValkeyProvider: Provider = {
       client = new Redis({
         port: cacheConfig.port || 6379,
         host: cacheConfig.host || 'localhost',
-        password: cacheConfig.password,
+        ...(cacheConfig.password ? { password: cacheConfig.password } : {}),
         db: cacheConfig.db || 0,
         ...baseOptions,
       });
