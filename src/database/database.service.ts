@@ -1,5 +1,11 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { MikroORM, EntityManager, Connection } from '@mikro-orm/postgresql';
+import {
+  MikroORM,
+  EntityManager,
+  Connection,
+  MigrationInfo,
+  MigrationRow,
+} from '@mikro-orm/postgresql';
 import { InjectMikroORM } from '@mikro-orm/nestjs';
 import { ConfigurationService } from '../config/configuration.service';
 
@@ -136,7 +142,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * Run pending migrations
    */
   async runMigrations(): Promise<void> {
-    const migrator = this.orm.getMigrator();
+    const migrator = this.orm.migrator;
     await migrator.up();
   }
 
@@ -144,7 +150,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * Rollback migrations
    */
   async rollbackMigrations(count: number = 1): Promise<void> {
-    const migrator = this.orm.getMigrator();
+    const migrator = this.orm.migrator;
     await migrator.down(count.toString());
   }
 
@@ -155,13 +161,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     pending: string[];
     executed: string[];
   }> {
-    const migrator = this.orm.getMigrator();
-    const pending = await migrator.getPendingMigrations();
-    const executed = await migrator.getExecutedMigrations();
+    const migrator = this.orm.migrator;
+    const pending = await migrator.getPending();
+    const executed = await migrator.getExecuted();
 
     return {
-      pending: pending.map((m) => m.name),
-      executed: executed.map((m) => m.name),
+      pending: pending.map((m: MigrationInfo) => m.name),
+      executed: executed.map((m: MigrationRow) => m.name),
     };
   }
 
@@ -169,32 +175,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
    * Create database schema
    */
   async createSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.createSchema();
+    const generator = this.orm.schema;
+    await generator.create();
   }
 
   /**
    * Update database schema
    */
   async updateSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.updateSchema();
+    const generator = this.orm.schema;
+    await generator.update();
   }
 
   /**
    * Drop database schema
    */
   async dropSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.dropSchema();
+    const generator = this.orm.schema;
+    await generator.drop();
   }
 
   /**
    * Refresh database schema (drop and create)
    */
   async refreshSchema(): Promise<void> {
-    const generator = this.orm.getSchemaGenerator();
-    await generator.refreshDatabase();
+    const generator = this.orm.schema;
+    await generator.drop();
+    await generator.create();
   }
 
   /**

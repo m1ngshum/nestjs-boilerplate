@@ -18,10 +18,6 @@ export function validateRequiredEnvVars(): ConfigValidationResult {
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Check for missing secrets
-  if (!process.env.JWT_SECRET) {
-    errors.push('JWT_SECRET must be set via environment variable.');
-  }
-
   if (!process.env.DATABASE_PASSWORD) {
     errors.push('DATABASE_PASSWORD must be set via environment variable.');
   }

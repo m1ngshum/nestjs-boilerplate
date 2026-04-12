@@ -40,7 +40,7 @@ pnpm run db:seed                # Run database seeders
 | Runtime | Node.js >= 24, TypeScript 6.0 (ES2021 target, strict mode) |
 | Framework | NestJS 11.x with **Fastify 5** adapter |
 | Database | PostgreSQL with MikroORM 7.x |
-| Cache | Valkey/Redis (iovalkey) with in-memory fallback |
+| Cache | Valkey/Redis (iovalkey) |
 | Auth | JWT (access + refresh tokens) via Passport, bcrypt password hashing |
 | Logging | Pino (structured JSON, automatic secret redaction, correlation IDs) |
 | Error Tracking | Sentry (optional) |
@@ -58,7 +58,7 @@ src/
 ├── app.module.ts              # Root module importing all features
 ├── app.controller.ts          # GET /, GET /ping
 ├── app.service.ts             # App info service
-├── cache/                     # CacheService (Redis/Valkey + in-memory fallback)
+├── cache/                     # CacheService (Redis/Valkey)
 │   └── valkey/                # Valkey/Redis client setup
 ├── common/                    # Shared code
 │   ├── constants/             # App-wide constants
@@ -212,7 +212,7 @@ Follow conventional commits:
 
 - This uses **Fastify**, not Express — middleware, plugins, and request/response objects differ from Express
 - The `ConfigurationService` wraps `@nestjs/config` with typed accessors and feature flags (`isFeatureEnabled()`)
-- Cache falls back to in-memory automatically when Redis/Valkey is unavailable
+- Redis/Valkey is required for caching and rate limiting — the app will not start without it
 - Sensitive fields (password, token, secret, apiKey, authorization, cookie) are automatically redacted in Pino logs via redact paths
 - All secrets (DATABASE_PASSWORD, JWT_SECRET, JWT_REFRESH_SECRET) must be provided via environment variables — there are no fallback defaults
 - The global exception filter catches all unhandled errors and formats consistent JSON responses

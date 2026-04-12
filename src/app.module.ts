@@ -107,7 +107,7 @@ export class AppModule implements NestModule, OnModuleInit {
 
   async onModuleInit() {
     if (this.configService.database.autoMigrate) {
-      const migrator = this.orm.getMigrator();
+      const migrator = this.orm.migrator;
       try {
         await migrator.up();
         this.logger.log('Database migrations completed successfully');

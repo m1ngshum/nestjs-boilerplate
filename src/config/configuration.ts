@@ -24,9 +24,9 @@ export interface DatabaseConfig {
 }
 
 export interface AuthConfig {
-  jwtSecret: string;
+  jwtSecret?: string;
   jwtExpiresIn: string;
-  jwtRefreshSecret: string;
+  jwtRefreshSecret?: string;
   jwtRefreshExpiresIn: string;
 }
 
@@ -150,7 +150,7 @@ export interface SecurityConfig {
 export interface AppConfiguration {
   app: AppConfig;
   database: DatabaseConfig;
-  auth: AuthConfig;
+  auth?: AuthConfig;
   cache: CacheConfig;
   valkey: ValkeyConfig;
   sentry: SentryConfig;
@@ -223,21 +223,9 @@ export default registerAs('config', (): AppConfiguration => {
     },
 
     auth: {
-      jwtSecret: (() => {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-          throw new Error('JWT_SECRET must be set via environment variable');
-        }
-        return secret;
-      })(),
+      jwtSecret: process.env.JWT_SECRET || undefined,
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-      jwtRefreshSecret: (() => {
-        const secret = process.env.JWT_REFRESH_SECRET;
-        if (!secret) {
-          throw new Error('JWT_REFRESH_SECRET must be set via environment variable');
-        }
-        return secret;
-      })(),
+      jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || undefined,
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
     },
 

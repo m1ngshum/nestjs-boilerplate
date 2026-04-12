@@ -29,7 +29,7 @@ const config = defineConfig({
 
   // Migrations (same path structure as existing project)
   migrations: {
-    path: Utils.detectTsNode() ? 'src/migrations' : 'dist/migrations',
+    path: Utils.detectTypeScriptSupport() ? 'src/migrations' : 'dist/migrations',
     safe: true,
   },
 
