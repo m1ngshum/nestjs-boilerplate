@@ -216,7 +216,7 @@ async function bootstrap() {
     const fastifyInstance = app.getHttpAdapter().getInstance() as any;
     fastifyInstance.addHook('preHandler', async (request: any) => {
       const base = `/${swaggerConfig.path}`;
-      const pathname = (request.url ?? '').split('?')[0].replace(//+$/, '');
+      const pathname = (request.url ?? '').split('?')[0].replace(/\/+$/, '');
       if (
         pathname === base ||
         pathname === `${base}/swagger-ui-init.js` ||
