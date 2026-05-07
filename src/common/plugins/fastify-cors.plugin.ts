@@ -265,7 +265,9 @@ async function fastifyCorsPlugin(fastify: FastifyInstance, options: FastifyCorsP
 function getAllowedDomains(configService: ConfigurationService): (string | RegExp)[] {
   const corsConfig = configService.cors;
   let domains: (string | RegExp)[] = [...(corsConfig.domains || [])];
-  if (configService.app.isProduction) {
+  // Key off ENVIRONMENT (the deployment signal) rather than NODE_ENV — NODE_ENV=production
+  // everywhere at runtime so it cannot distinguish staging from prod.
+  if (process.env.ENVIRONMENT === 'production') {
     domains = [...domains, ...(corsConfig.production || [])];
   } else {
     domains = [...domains, ...(corsConfig.production || []), ...(corsConfig.testing || [])];
