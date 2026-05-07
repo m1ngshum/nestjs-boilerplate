@@ -173,9 +173,9 @@ class AppConfigDto {
   @IsOptional()
   APP_URL?: string;
 
-  @IsIn(['development', 'production', 'test'])
+  @IsIn(['development', 'production', 'test', 'staging', 'uat', 'sandbox'])
   @IsOptional()
-  NODE_ENV?: 'development' | 'production' | 'test';
+  NODE_ENV?: 'development' | 'production' | 'test' | 'staging' | 'uat' | 'sandbox';
 }
 
 class CacheConfigDto {
