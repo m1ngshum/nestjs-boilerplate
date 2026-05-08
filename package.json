@@ -60,7 +60,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@sentry/nestjs": "^10.48.0",
     "@sentry/profiling-node": "^10.48.0",
-    "axios": "^1.15.0",
+    "axios": "^1.15.2",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
