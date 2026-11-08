@@ -2,7 +2,7 @@
   "name": "nestjs-boilerplate",
   "version": "1.0.0",
   "description": "A comprehensive NestJS boilerplate with authentication, logging, database, caching, and more",
-  "author": "m1ngshum",
+  "author": "m1ngshum <hello@m1ngshum.com>",
   "license": "MIT",
   "keywords": [
     "nestjs",
